@@ -30,6 +30,7 @@ import ModifyControlsDialog from './SettingsScreen/ModifyControlsDialog';
 
 import { GameLayout } from './GameLayout';
 import { useBombManager } from '../../hooks/useBombManager';
+import usePowerUpManager from '../../hooks/usePowerUpManager';
 import { usePlayerActions } from '../../hooks/usePlayerActions';
 import { defaultMap } from '../../constants/contants';
 
@@ -79,6 +80,11 @@ export const GameScreen = () => {
   const {
     dropBomb: dropPlayerThreeBomb
   } = useBombManager(2, playersRef, setPlayers, mapRef, setMap);
+
+  const {
+    addPowerUp, removePowerUp, isPowerUpActive
+  } = usePowerUpManager();
+
   const [keyBindings, setKeyBindings] = useState<KeyBindings>({});
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
@@ -190,7 +196,7 @@ export const GameScreen = () => {
       keyBindings: keyBindings['3'],
       enemies: [player, playerTwo]
     } : null
-  ], mapRef, setMap);
+  ], mapRef, setMap, addPowerUp, removePowerUp, isPowerUpActive);
 
   useEffect(() => {
     const storedBindings = localStorage.getItem('playerKeyBindings');

@@ -2,7 +2,6 @@
 /* eslint-disable prefer-destructuring */
 /* eslint-disable class-methods-use-this */
 // eslint-disable-next-line import/no-cycle
-
 import {
   GameMap, Power, isBomb, isObstacle, isPower
 } from './gameItem';
@@ -16,13 +15,13 @@ class Player {
 
   private y: number;
 
-  private isActive: boolean;// New attribute to track if the player is still active
+  private isActive: boolean;
 
   private bombs: number;
 
   private bombRange: number;
 
-  private powerUps: Power[];
+  private powerUps: Set<Power>;
 
   private obstacles: number;
 
@@ -44,7 +43,7 @@ class Player {
     this.isActive = isActive;
     this.bombs = bombs;
     this.bombRange = bombRange;
-    this.powerUps = powerUps;
+    this.powerUps = new Set(powerUps);
     this.obstacles = obstacles;
   }
 
@@ -57,7 +56,7 @@ class Player {
       player.isActive,
       player.bombs,
       player.bombRange,
-      player.powerUps,
+      Array.from(player.powerUps),
       player.obstacles
     );
   }
@@ -66,24 +65,28 @@ class Player {
     direction: string,
     map: GameMap,
     otherPlayers: Player[],
-    setMap: (m: GameMap) => void
+    setMap: (m: GameMap) => void,
+    addPowerUp: (powerUp: Power, duration: number) => void,
+    removePowerUp: (powerUp: Power) => void,
+    isPowerUpActive: (powerUp: Power) => boolean
   ): Player {
     let newX = this.x;
     let newY = this.y;
 
     switch (direction) {
       case 'up':
-        newY -= this.y > 0 && this.isValidMove(newY - 1, this.x, map) ? 1 : 0;
+        newY -= this.y > 0 && this.isValidMove(newY - 1, this.x, map, isPowerUpActive) ? 1 : 0;
         break;
       case 'down':
-        newY += this.y < map.length - 1 && this.isValidMove(newY + 1, this.x, map) ? 1 : 0;
+        newY += this.y < map.length - 1
+        && this.isValidMove(newY + 1, this.x, map, isPowerUpActive) ? 1 : 0;
         break;
       case 'left':
-        newX -= this.x > 0 && this.isValidMove(this.y, newX - 1, map) ? 1 : 0;
+        newX -= this.x > 0 && this.isValidMove(this.y, newX - 1, map, isPowerUpActive) ? 1 : 0;
         break;
       case 'right':
         newX += (
-          this.x < map[0].length - 1 && this.isValidMove(this.y, newX + 1, map)
+          this.x < map[0].length - 1 && this.isValidMove(this.y, newX + 1, map, isPowerUpActive)
         ) ? 1 : 0;
         break;
       default:
@@ -95,7 +98,7 @@ class Player {
     if (!collidesWithPlayer) {
       this.x = newX;
       this.y = newY;
-      this.checkCollisionWithPowerUp(map, setMap);
+      this.checkCollisionWithPowerUp(map, setMap, addPowerUp);
     }
 
     return this;
@@ -110,43 +113,62 @@ class Player {
         this.bombRange += 1;
         break;
       case 'RollerSkate':
-        if (!this.powerUps.includes('RollerSkate')) {
-          this.powerUps.push(powerUp);
+        if (!this.powerUps.has('RollerSkate')) {
+          this.powerUps.add(powerUp);
         }
         break;
       case 'Invincibility':
-        this.powerUps.push(powerUp);
-        // TODO: Implement invincibility for a short time
+        if (!this.isInvincible()) {
+          this.activatePowerUp('Invincibility', 15000);
+        }
         break;
       case 'Ghost':
-        this.powerUps.push(powerUp);
-        // TODO: Implement ghost mode for a short time
+        if (!this.isGhost()) {
+          this.activatePowerUp('Ghost', 15000);
+        }
         break;
       case 'Obstacle':
         this.obstacles += 3;
-        this.powerUps.push(powerUp);
+        this.powerUps.add(powerUp);
         break;
       default:
-        this.powerUps.push(powerUp);
+        console.log('Unknown power-up:', powerUp);
         break;
     }
     console.log(`${this.name} has picked up a ${powerUp} power-up.`);
   }
 
-  checkCollisionWithPowerUp(map: GameMap, setMap: (m: GameMap) => void): void {
+  checkCollisionWithPowerUp(map: GameMap, setMap:
+     (m: GameMap) => void, addPowerUp: (powerUp: Power, duration: number) => void): void {
     const cell = map[this.y][this.x];
     if (isPower(cell)) {
       this.addPowerUp(cell as Power);
       const newMap = [...map];
       newMap[this.y][this.x] = 'Empty';
       setMap(newMap);
+      if (cell === 'Ghost') {
+        addPowerUp('Ghost', 15000);
+      } else if (cell === 'Invincibility') {
+        addPowerUp('Invincibility', 15000);
+      }
     }
   }
 
-  // eslint-disable-next-line no-unused-vars
-  isValidMove(y: number, x: number, map: GameMap): boolean {
-    if (this.isGhost()) return !isObstacle(map[y][x]);
+  isValidMove(
+    y: number,
+    x: number,
+    map: GameMap,
+    isPowerUpActive: (powerUp: Power) => boolean
+  ): boolean {
+    if (isPowerUpActive('Ghost')) {
+      console.log('I still consider as ghost');
+      return !isObstacle(map[y][x]) && this.isInBounds(x, y);
+    }
     return map[y][x] !== 'Wall' && map[y][x] !== 'Box' && !isObstacle(map[y][x]) && !isBomb(map[y][x]) && (map[y][x] === 'Empty' || isPower(map[y][x]));
+  }
+
+  isInBounds(x: number, y: number): boolean {
+    return x >= 1 && x < 14 && y >= 1 && y < 9;
   }
 
   killPlayer(): void {
@@ -165,11 +187,32 @@ class Player {
   }
 
   isInvincible(): boolean {
-    return this.powerUps.includes('Invincibility');
+    return this.powerUps.has('Invincibility');
   }
 
   isGhost(): boolean {
-    return this.powerUps.includes('Ghost');
+    return this.powerUps.has('Ghost');
+  }
+
+  activatePowerUp(powerUp: Power, duration: number): void {
+    this.powerUps.add(powerUp);
+    this.notifyPowerUp(powerUp, duration);
+    setTimeout(() => {
+      this.deactivatePowerUp(powerUp);
+    }, duration);
+  }
+
+  deactivatePowerUp(powerUp: Power): void {
+    this.powerUps.delete(powerUp);
+    console.log(`${this.name} is no longer ${powerUp.toLowerCase()}.`);
+  }
+
+  notifyPowerUp(powerUp: Power, duration: number): void {
+    const durationInSeconds = duration / 1000;
+    console.log(`${this.name} is now ${powerUp.toLowerCase()} for ${durationInSeconds} seconds.`);
+    setTimeout(() => {
+      console.log(`${this.name}'s ${powerUp.toLowerCase()} power-up will expire in 3 seconds.`);
+    }, duration - 3000);
   }
 
   getId(): string {
@@ -197,7 +240,7 @@ class Player {
   }
 
   getPowerUps(): Power[] {
-    return this.powerUps;
+    return Array.from(this.powerUps);
   }
 
   getObstacles(): number {
