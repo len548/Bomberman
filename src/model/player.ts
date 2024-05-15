@@ -164,6 +164,19 @@ class Player {
     this.bombs -= 1;
   }
 
+  removePowerUp(powerUp: Power): void {
+    const index = this.powerUps.indexOf(powerUp);
+    if (index > -1) {
+      this.powerUps.splice(index, 1);
+      console.log(`${this.name} has lost the ${powerUp} power-up.`);
+      console.log(`player ${this.id} power-ups: ${this.powerUps}`);
+    }
+  }
+
+  isDetonator(): boolean {
+    return this.powerUps.includes('Detonator');
+  }
+
   isInvincible(): boolean {
     return this.powerUps.includes('Invincibility');
   }

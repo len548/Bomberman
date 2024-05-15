@@ -19,7 +19,7 @@ export const usePlayerActions = (
   const handleKeyDown = useCallback((event: KeyboardEvent) => {
     const map = mapRef.current;
     // eslint-disable-next-line no-console
-    console.log(mapRef.current);
+    // console.log(mapRef.current);
     playersInfo.forEach((info) => {
       if (info && info.player.isAlive()) {
         const actions = {
@@ -39,7 +39,7 @@ export const usePlayerActions = (
             if (updatedPlayer) {
               info.setNewPlayer(Player.fromPlayer(updatedPlayer));
               // eslint-disable-next-line no-console
-              console.log(updatedPlayer.getX(), updatedPlayer.getY());
+              // console.log(updatedPlayer.getX(), updatedPlayer.getY());
             }
           });
         }

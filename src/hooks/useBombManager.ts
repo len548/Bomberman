@@ -2,7 +2,9 @@
 /* eslint-disable no-plusplus */
 import { useCallback } from 'react';
 import { Player } from '../model/player';
-import { Bomb, GameMap, randomPowerUpGenerator } from '../model/gameItem';
+import {
+  Bomb, GameMap, isBomb, randomPowerUpGenerator
+} from '../model/gameItem';
 
 export const useBombManager = (
   playerID: number,
@@ -37,9 +39,6 @@ export const useBombManager = (
     }
     positionsToCheck.forEach(({ newY, newX }) => {
       const affectedItem = map[newY][newX];
-      console.log(`newY: ${newY}, newX: ${newX}`);
-      console.log(affectedItem);
-
       // TODO: Trigger other bombs
       // if (typeof affectedItem !== 'string' && 'range' in affectedItem) {
       //   explodeBomb(newY, newX, affectedItem);
@@ -67,18 +66,34 @@ export const useBombManager = (
   }, [mapRef, setMap, playersRef, setPlayers]);
 
   const dropBomb = useCallback((y: number, x: number): void => {
+    const player = playersRef.current[playerID];
     const map = mapRef.current;
+
+    if (player.getBombs() <= 0) {
+      if (!player.isDetonator()) return;
+      console.log('Detonator power activated!');
+      // Handling detonator power
+      map.forEach((row, i) => {
+        row.forEach((cell, j) => {
+          if (isBomb(cell) && cell.ownerId === player.getId()) {
+            explodeBomb(i, j, cell);
+            console.log(`Detonated bomb at ${j}, ${i} of player ${player.getId()}`);
+          }
+        });
+      });
+      player.removePowerUp('Detonator');
+      setPlayers[playerID](Player.fromPlayer(player));
+      return;
+    }
+
     if (map[y][x] !== 'Empty') return; // Ensure the cell is empty before placing a bomb
 
-    const player = playersRef.current[playerID];
-    if (player.getBombs() <= 0) return; // Ensure the player has bombs left
     player.decrementBombs();
     const bomb: Bomb = {
       ownerId: player.getId(),
       coords: { x, y },
       range: player.getBombRange(), // Assuming getBombRange is a method of Player
     };
-
     // Place the bomb in the map
     const newMap = map.map((row) => [...row]);
     newMap[y][x] = bomb;
@@ -87,6 +102,7 @@ export const useBombManager = (
     setPlayers[playerID](Player.fromPlayer(player));
 
     // Set a timer for the bomb to explode
+    if (player.isDetonator()) return; // Skip if the player has Detonator power
     setTimeout(() => {
       explodeBomb(y, x, bomb);
     }, 3000); // Explodes after 3 seconds
