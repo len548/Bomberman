@@ -1,3 +1,4 @@
+/* eslint-disable default-param-last */
 /* eslint-disable no-console */
 /* eslint-disable prefer-destructuring */
 /* eslint-disable class-methods-use-this */
@@ -25,6 +26,16 @@ class Player {
 
   private obstacles: number;
 
+  private originalImage: string;
+
+  private ghostImage: string;
+
+  private invincibleImage: string;
+
+  private currentImage: string;
+
+  private flashingInterval: NodeJS.Timeout | null = null;
+
   constructor(
     id: string,
     name: string,
@@ -34,7 +45,10 @@ class Player {
     bombs: number = 4,
     bombRange: number = 2,
     powerUps: Power[] = [],
-    obstacles: number = 0
+    obstacles: number = 0,
+    originalImage: string,
+    ghostImage: string,
+    invincibleImage: string
   ) {
     this.id = id;
     this.name = name;
@@ -45,6 +59,10 @@ class Player {
     this.bombRange = bombRange;
     this.powerUps = new Set(powerUps);
     this.obstacles = obstacles;
+    this.originalImage = originalImage;
+    this.ghostImage = ghostImage;
+    this.invincibleImage = invincibleImage;
+    this.currentImage = originalImage;
   }
 
   static fromPlayer(player: Player): Player {
@@ -57,7 +75,10 @@ class Player {
       player.bombs,
       player.bombRange,
       Array.from(player.powerUps),
-      player.obstacles
+      player.obstacles,
+      player.originalImage,
+      player.ghostImage,
+      player.invincibleImage
     );
   }
 
@@ -139,7 +160,7 @@ class Player {
   }
 
   checkCollisionWithPowerUp(map: GameMap, setMap:
-     (m: GameMap) => void, addPowerUp: (powerUp: Power, duration: number) => void): void {
+    (m: GameMap) => void, addPowerUp: (powerUp: Power, duration: number) => void): void {
     const cell = map[this.y][this.x];
     if (isPower(cell)) {
       this.addPowerUp(cell as Power);
@@ -197,6 +218,7 @@ class Player {
   activatePowerUp(powerUp: Power, duration: number): void {
     this.powerUps.add(powerUp);
     this.notifyPowerUp(powerUp, duration);
+    this.updatePlayerImage(powerUp);
     setTimeout(() => {
       this.deactivatePowerUp(powerUp);
     }, duration);
@@ -205,6 +227,7 @@ class Player {
   deactivatePowerUp(powerUp: Power): void {
     this.powerUps.delete(powerUp);
     console.log(`${this.name} is no longer ${powerUp.toLowerCase()}.`);
+    this.updatePlayerImage(); // Update to original image
   }
 
   notifyPowerUp(powerUp: Power, duration: number): void {
@@ -212,7 +235,36 @@ class Player {
     console.log(`${this.name} is now ${powerUp.toLowerCase()} for ${durationInSeconds} seconds.`);
     setTimeout(() => {
       console.log(`${this.name}'s ${powerUp.toLowerCase()} power-up will expire in 3 seconds.`);
+      this.startFlashing();
     }, duration - 3000);
+  }
+
+  updatePlayerImage(powerUp?: Power): void {
+    if (powerUp === 'Ghost') {
+      this.currentImage = this.ghostImage;
+    } else if (powerUp === 'Invincibility') {
+      this.currentImage = this.invincibleImage;
+    } else {
+      this.currentImage = this.originalImage;
+    }
+  }
+
+  startFlashing(): void {
+    if (this.flashingInterval) {
+      clearInterval(this.flashingInterval);
+    }
+    let isOriginalImage = false;
+    this.flashingInterval = setInterval(() => {
+      // eslint-disable-next-line no-nested-ternary
+      this.currentImage = isOriginalImage ? this.originalImage
+        : (this.isInvincible() ? this.invincibleImage : this.ghostImage);
+      isOriginalImage = !isOriginalImage;
+    }, 500);
+    setTimeout(() => {
+      clearInterval(this.flashingInterval as NodeJS.Timeout);
+      this.flashingInterval = null;
+      this.updatePlayerImage(); // Reset to the appropriate image
+    }, 3000);
   }
 
   getId(): string {
@@ -249,6 +301,10 @@ class Player {
 
   isAlive(): boolean {
     return this.isActive;
+  }
+
+  getCurrentImage(): string {
+    return this.currentImage;
   }
 }
 

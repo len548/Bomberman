@@ -26,6 +26,16 @@ import { SmartMonster } from '../../model/smartMonster';
 import { ForkMonster } from '../../model/forkMonster';
 import { RoundResultDialog } from './RoundResultDialog';
 
+import player1Image from '../../assets/player1.png';
+import player1GhostImage from '../../assets/player1ghost.png';
+import player1InvincibleImage from '../../assets/player1armor.png';
+import player2Image from '../../assets/player2.png';
+import player2GhostImage from '../../assets/player2ghost.png';
+import player2InvincibleImage from '../../assets/player2armor.png';
+import player3Image from '../../assets/player3.png';
+import player3GhostImage from '../../assets/player3ghost.png';
+import player3InvincibleImage from '../../assets/player3armor.png';
+
 import ModifyControlsDialog from './SettingsScreen/ModifyControlsDialog';
 
 import { GameLayout } from './GameLayout';
@@ -63,9 +73,28 @@ const fetchMap = async (): Promise<GameMap> => {
 
 export const GameScreen = () => {
   const { numOfPlayers, numOfRounds, selectedMap } = useParams();
-  const [player, setPlayer] = useState(new Player('1', playerNames[0], 1, 1));
-  const [playerTwo, setPlayerTwo] = useState(new Player('2', playerNames[1], 13, 8));
-  const [playerThree, setPlayerThree] = useState(numOfPlayers === '3' ? new Player('3', playerNames[2], 7, 7) : null);
+
+  const playerImages = [
+    {
+      original: player1Image,
+      ghost: player1GhostImage,
+      invincible: player1InvincibleImage,
+    },
+    {
+      original: player2Image,
+      ghost: player2GhostImage,
+      invincible: player2InvincibleImage,
+    },
+    {
+      original: player3Image,
+      ghost: player3GhostImage,
+      invincible: player3InvincibleImage,
+    },
+  ];
+
+  const [player, setPlayer] = useState(new Player('1', playerNames[0], 1, 1, true, 4, 2, [], 0, playerImages[0].original, playerImages[0].ghost, playerImages[0].invincible));
+  const [playerTwo, setPlayerTwo] = useState(new Player('2', playerNames[1], 13, 8, true, 4, 2, [], 0, playerImages[1].original, playerImages[1].ghost, playerImages[1].invincible));
+  const [playerThree, setPlayerThree] = useState(numOfPlayers === '3' ? new Player('3', playerNames[2], 7, 7, true, 4, 2, [], 0, playerImages[2].original, playerImages[2].ghost, playerImages[2].invincible) : null);
   const [map, setMap] = useState<GameMap>([]);
   const mapRef = useRef(map);
   const playersRef = useRef([player, playerTwo, playerThree].filter((p): p is Player => p !== null));
@@ -248,9 +277,9 @@ export const GameScreen = () => {
   }, [isPaused, map]);
 
   const resetRound = () => {
-    setPlayer(new Player('1', playerNames[0], 1, 1, true));
-    setPlayerTwo(new Player('2', playerNames[1], 13, 8, true));
-    setPlayerThree(numOfPlayers === '3' ? new Player('3', playerNames[2], 1, 8, true) : null);
+    setPlayer(new Player('1', playerNames[0], 1, 1, true, 4, 2, [], 0, playerImages[0].original, playerImages[0].ghost, playerImages[0].invincible));
+    setPlayerTwo(new Player('2', playerNames[1], 13, 8, true, 4, 2, [], 0, playerImages[1].original, playerImages[1].ghost, playerImages[1].invincible));
+    setPlayerThree(numOfPlayers === '3' ? new Player('3', playerNames[2], 1, 8, true, 4, 2, [], 0, playerImages[2].original, playerImages[2].ghost, playerImages[2].invincible) : null);
     if (selectedMap === 'map1') {
       if (numOfPlayers === '3') {
         setMonsters([
@@ -383,8 +412,8 @@ export const GameScreen = () => {
   };
 
   const handleRestartGame = () => {
-    setPlayer(new Player('player1', playerNames[0], 1, 1));
-    setPlayerTwo(new Player('player2', playerNames[1], 13, 8));
+    setPlayer(new Player('player1', playerNames[0], 1, 1, true, 4, 2, [], 0, playerImages[0].original, playerImages[0].ghost, playerImages[0].invincible));
+    setPlayerTwo(new Player('player2', playerNames[1], 13, 8, true, 4, 2, [], 0, playerImages[1].original, playerImages[1].ghost, playerImages[1].invincible));
 
     setMonsters([
       new SmartMonster('monster1', 'Monster 1', 5, 5),

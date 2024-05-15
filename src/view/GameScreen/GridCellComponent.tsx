@@ -7,9 +7,6 @@ import {
 } from './GameScreen.styles';
 import wallImage from '../../assets/wall.jpeg';
 import boxImage from '../../assets/box.png';
-import player1Image from '../../assets/player1.png';
-import player2Image from '../../assets/player2.png';
-import player3Image from '../../assets/player3.png';
 import bombImage from '../../assets/bomb.png';
 import addBombImage from '../../assets/addbomb.png';
 import blastRangeUpImage from '../../assets/blastrange.png';
@@ -64,11 +61,7 @@ export const GridCellComponent = ({
       {player && player.isAlive() && (
         <CharacterContainer>
           <img
-            src={
-              player.getId() === '1'
-                ? player1Image : player.getId() === '2'
-                  ? player2Image : player3Image
-            }
+            src={player.getCurrentImage()}
             alt="Player"
             style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }}
           />
