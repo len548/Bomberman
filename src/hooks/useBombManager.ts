@@ -2,7 +2,9 @@
 /* eslint-disable no-plusplus */
 import { useCallback } from 'react';
 import { Player } from '../model/player';
-import { Bomb, GameMap, randomPowerUpGenerator } from '../model/gameItem';
+import {
+  Bomb, GameMap, isObstacle, randomPowerUpGenerator
+} from '../model/gameItem';
 
 export const useBombManager = (
   playerID: number,
@@ -21,20 +23,38 @@ export const useBombManager = (
     const mapWidth = map[0].length;
 
     // Vertical - up and down from the bomb
-    for (let dy = -blastRange; dy <= blastRange; dy += 1) {
+    for (let dy = -1; dy >= -blastRange; dy -= 1) {
       const tempY = y + dy;
       if (tempY >= 0 && tempY < mapHeight) {
         positionsToCheck.push({ newY: tempY, newX: x });
-      }
+        if (map[tempY][x] === 'Wall' || map[tempY][x] === 'Box' || isObstacle(map[tempY][x])) break;
+      } else break;
+    }
+    for (let dy = 1; dy <= blastRange; dy += 1) {
+      const tempY = y + dy;
+      if (tempY >= 0 && tempY < mapHeight) {
+        positionsToCheck.push({ newY: tempY, newX: x });
+        if (map[tempY][x] === 'Wall' || map[tempY][x] === 'Box' || isObstacle(map[tempY][x])) break;
+      } else break;
     }
 
     // Horizontal - left and right from the bomb
-    for (let dx = -blastRange; dx <= blastRange; dx += 1) {
+    for (let dx = -1; dx >= -blastRange; dx -= 1) {
       const tempX = x + dx;
       if (tempX >= 0 && tempX < mapWidth) {
-        positionsToCheck.push({ newY: y, newX: x + dx });
-      }
+        positionsToCheck.push({ newY: y, newX: tempX });
+        if (map[y][tempX] === 'Wall' || map[y][tempX] === 'Box' || isObstacle(map[y][tempX])) break;
+      } else break;
     }
+
+    for (let dx = 1; dx <= blastRange; dx += 1) {
+      const tempX = x + dx;
+      if (tempX >= 0 && tempX < mapWidth) {
+        positionsToCheck.push({ newY: y, newX: tempX });
+        if (map[y][tempX] === 'Wall' || map[y][tempX] === 'Box' || isObstacle(map[y][tempX])) break;
+      } else break;
+    }
+
     positionsToCheck.forEach(({ newY, newX }) => {
       const affectedItem = map[newY][newX];
       console.log(`newY: ${newY}, newX: ${newX}`);
