@@ -61,7 +61,7 @@ export const GridCellComponent = ({
       {player && player.isAlive() && (
         <CharacterContainer>
           <img
-            src={player.getCurrentImage()}
+            src={player.getImg()}
             alt="Player"
             style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }}
           />

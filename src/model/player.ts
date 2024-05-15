@@ -182,7 +182,6 @@ class Player {
     isPowerUpActive: (powerUp: Power) => boolean
   ): boolean {
     if (isPowerUpActive('Ghost')) {
-      console.log('I still consider as ghost');
       return !isObstacle(map[y][x]) && this.isInBounds(x, y);
     }
     return map[y][x] !== 'Wall' && map[y][x] !== 'Box' && !isObstacle(map[y][x]) && !isBomb(map[y][x]) && (map[y][x] === 'Empty' || isPower(map[y][x]));
@@ -227,7 +226,7 @@ class Player {
   deactivatePowerUp(powerUp: Power): void {
     this.powerUps.delete(powerUp);
     console.log(`${this.name} is no longer ${powerUp.toLowerCase()}.`);
-    this.updatePlayerImage(); // Update to original image
+    this.updatePlayerImage();
   }
 
   notifyPowerUp(powerUp: Power, duration: number): void {
@@ -303,7 +302,7 @@ class Player {
     return this.isActive;
   }
 
-  getCurrentImage(): string {
+  getImg(): string {
     return this.currentImage;
   }
 }

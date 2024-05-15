@@ -57,8 +57,6 @@ export const useBombManager = (
 
     positionsToCheck.forEach(({ newY, newX }) => {
       const affectedItem = map[newY][newX];
-      console.log(`newY: ${newY}, newX: ${newX}`);
-      console.log(affectedItem);
 
       // TODO: Trigger other bombs
       // if (typeof affectedItem !== 'string' && 'range' in affectedItem) {
