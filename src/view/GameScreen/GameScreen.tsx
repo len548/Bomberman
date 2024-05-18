@@ -92,9 +92,9 @@ export const GameScreen = () => {
     },
   ];
 
-  const [player, setPlayer] = useState(new Player('1', playerNames[0], 1, 1, true, 4, 2, [], 0, playerImages[0].original, playerImages[0].ghost, playerImages[0].invincible));
-  const [playerTwo, setPlayerTwo] = useState(new Player('2', playerNames[1], 13, 8, true, 4, 2, [], 0, playerImages[1].original, playerImages[1].ghost, playerImages[1].invincible));
-  const [playerThree, setPlayerThree] = useState(numOfPlayers === '3' ? new Player('3', playerNames[2], 7, 7, true, 4, 2, [], 0, playerImages[2].original, playerImages[2].ghost, playerImages[2].invincible) : null);
+  const [player, setPlayer] = useState(new Player('1', 'player1', 1, 1, true, 4, 2, [], 0, playerImages[0].original, playerImages[0].ghost, playerImages[0].invincible));
+  const [playerTwo, setPlayerTwo] = useState(new Player('2', 'player2', 13, 8, true, 4, 2, [], 0, playerImages[1].original, playerImages[1].ghost, playerImages[1].invincible));
+  const [playerThree, setPlayerThree] = useState(numOfPlayers === '3' ? new Player('3', 'player3', 7, 7, true, 4, 2, [], 0, playerImages[2].original, playerImages[2].ghost, playerImages[2].invincible) : null);
   const [map, setMap] = useState<GameMap>([]);
   const mapRef = useRef(map);
   const playersRef = useRef([player, playerTwo, playerThree].filter((p): p is Player => p !== null));
@@ -277,9 +277,9 @@ export const GameScreen = () => {
   }, [isPaused, map]);
 
   const resetRound = () => {
-    setPlayer(new Player('1', playerNames[0], 1, 1, true, 4, 2, [], 0, playerImages[0].original, playerImages[0].ghost, playerImages[0].invincible));
-    setPlayerTwo(new Player('2', playerNames[1], 13, 8, true, 4, 2, [], 0, playerImages[1].original, playerImages[1].ghost, playerImages[1].invincible));
-    setPlayerThree(numOfPlayers === '3' ? new Player('3', playerNames[2], 1, 8, true, 4, 2, [], 0, playerImages[2].original, playerImages[2].ghost, playerImages[2].invincible) : null);
+    setPlayer(new Player('1', 'player1', 1, 1, true, 4, 2, [], 0, playerImages[0].original, playerImages[0].ghost, playerImages[0].invincible));
+    setPlayerTwo(new Player('2', 'player2', 13, 8, true, 4, 2, [], 0, playerImages[1].original, playerImages[1].ghost, playerImages[1].invincible));
+    setPlayerThree(numOfPlayers === '3' ? new Player('3', 'player3', 1, 8, true, 4, 2, [], 0, playerImages[2].original, playerImages[2].ghost, playerImages[2].invincible) : null);
     if (selectedMap === 'map1') {
       if (numOfPlayers === '3') {
         setMonsters([
@@ -356,21 +356,21 @@ export const GameScreen = () => {
       if (monsterTemp.getX() === currentPlayer.getX()
         && monsterTemp.getY() === currentPlayer.getY()
         && currentPlayer.isAlive()
-        && !currentPlayer.isInvincible()) {
+        && !isPowerUpActive('Invincibility')) {
         currentPlayer.killPlayer();
         setPlayer(Player.fromPlayer(currentPlayer));
       }
       if (monsterTemp.getX() === currentPlayerTwo.getX()
         && monsterTemp.getY() === currentPlayerTwo.getY()
         && currentPlayerTwo.isAlive()
-        && !currentPlayerTwo.isInvincible()) {
+        && !isPowerUpActive('Invincibility')) {
         currentPlayerTwo.killPlayer();
         setPlayerTwo(Player.fromPlayer(currentPlayerTwo));
       }
       if (currentPlayerThree && monsterTemp.getX() === currentPlayerThree.getX()
         && monsterTemp.getY() === currentPlayerThree.getY()
         && currentPlayerThree.isAlive()
-        && !currentPlayerThree.isInvincible()) {
+        && !isPowerUpActive('Invincibility')) {
         currentPlayerThree.killPlayer();
         setPlayerThree(Player.fromPlayer(currentPlayerThree));
       }
@@ -439,6 +439,7 @@ export const GameScreen = () => {
       players={[player, playerTwo, playerThree].filter((p) => p?.isAlive()) as Player[]}
       monsters={monsters}
       map={map}
+      isPowerUpActive={isPowerUpActive} // Pass this function to GridCellComponent
     />
   )));
 
