@@ -2,26 +2,35 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { useState, useCallback } from 'react';
 import { Power } from '../model/gameItem';
+import { Player } from '../model/player';
 
 const usePowerUpManager = () => {
-  const [activePowerUps, setActivePowerUps] = useState<Set<Power>>(new Set());
-  const [flashingPowerUps, setFlashingPowerUps] = useState<Set<Power>>(new Set());
+  const [activePowerUps, setActivePowerUps] = useState<Record<string, Set<Power>>>({});
+  const [flashingPowerUps, setFlashingPowerUps] = useState<Record<string, Set<Power>>>({});
 
-  const addPowerUp = useCallback((powerUp: Power, duration: number) => {
-    setActivePowerUps((prev) => new Set([...prev, powerUp]));
+  const addPowerUp = useCallback((playerId: string, powerUp: Power, duration: number) => {
+    setActivePowerUps((prev) => ({
+      ...prev,
+      [playerId]: new Set([...(prev[playerId] || []), powerUp]),
+    }));
 
     const timeout = setTimeout(() => {
-      setFlashingPowerUps((prev) => new Set([...prev, powerUp]));
+      setFlashingPowerUps((prev) => ({
+        ...prev,
+        [playerId]: new Set([...(prev[playerId] || []), powerUp]),
+      }));
+
       const expireTimeout = setTimeout(() => {
         setActivePowerUps((prev) => {
-          const newSet = new Set(prev);
+          const newSet = new Set(prev[playerId]);
           newSet.delete(powerUp);
-          return newSet;
+          return { ...prev, [playerId]: newSet };
         });
+
         setFlashingPowerUps((prev) => {
-          const newSet = new Set(prev);
+          const newSet = new Set(prev[playerId]);
           newSet.delete(powerUp);
-          return newSet;
+          return { ...prev, [playerId]: newSet };
         });
       }, 3000);
 
@@ -31,21 +40,22 @@ const usePowerUpManager = () => {
     return () => clearTimeout(timeout);
   }, []);
 
-  const removePowerUp = useCallback((powerUp: Power) => {
+  const removePowerUp = useCallback((playerId: string, powerUp: Power) => {
     setActivePowerUps((prev) => {
-      const newSet = new Set(prev);
+      const newSet = new Set(prev[playerId]);
       newSet.delete(powerUp);
-      return newSet;
+      return { ...prev, [playerId]: newSet };
     });
+
     setFlashingPowerUps((prev) => {
-      const newSet = new Set(prev);
+      const newSet = new Set(prev[playerId]);
       newSet.delete(powerUp);
-      return newSet;
+      return { ...prev, [playerId]: newSet };
     });
   }, []);
 
-  const isPowerUpActive = useCallback((powerUp: Power) => activePowerUps.has(powerUp), [activePowerUps]);
-  const isPowerUpFlashing = useCallback((powerUp: Power) => flashingPowerUps.has(powerUp), [flashingPowerUps]);
+  const isPowerUpActive = useCallback((playerId: string, powerUp: Power) => activePowerUps[playerId]?.has(powerUp) || false, [activePowerUps]);
+  const isPowerUpFlashing = useCallback((playerId: string, powerUp: Power) => flashingPowerUps[playerId]?.has(powerUp) || false, [flashingPowerUps]);
 
   return {
     addPowerUp,

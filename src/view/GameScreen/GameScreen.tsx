@@ -17,6 +17,7 @@ import { GridCellComponent } from './GridCellComponent';
 import { KeyBindings } from '../../constants/props';
 import {
   GameMap,
+  Power,
   gameItem,
   randomPowerUpGenerator
 } from '../../model/gameItem';
@@ -226,7 +227,7 @@ export const GameScreen = () => {
       keyBindings: keyBindings['3'],
       enemies: [player, playerTwo]
     } : null
-  ], mapRef, setMap, addPowerUp, removePowerUp, isPowerUpActive);
+  ], mapRef, setMap, (playerId: string, powerUp: Power, duration: number) => addPowerUp(playerId, powerUp, duration), (playerId: string, powerUp: Power) => removePowerUp(playerId, powerUp), (playerId: string, powerUp: Power) => isPowerUpActive(playerId, powerUp));
 
   useEffect(() => {
     const storedBindings = localStorage.getItem('playerKeyBindings');
@@ -277,7 +278,7 @@ export const GameScreen = () => {
     }
   }, [isPaused, map]);
 
-  const resetRound = () => {
+  const resetRound = useCallback(() => {
     setPlayer(new Player('1', 'player1', 1, 1, true, 4, 2, [], 0, playerImages[0].original, playerImages[0].ghost, playerImages[0].invincible));
     setPlayerTwo(new Player('2', 'player2', 13, 8, true, 4, 2, [], 0, playerImages[1].original, playerImages[1].ghost, playerImages[1].invincible));
     setPlayerThree(numOfPlayers === '3' ? new Player('3', 'player3', 1, 8, true, 4, 2, [], 0, playerImages[2].original, playerImages[2].ghost, playerImages[2].invincible) : null);
@@ -323,9 +324,9 @@ export const GameScreen = () => {
         ]);
       }
     }
-  };
+  }, [numOfPlayers, selectedMap]);
 
-  const checkEndOfRound = () => {
+  const checkEndOfRound = useCallback(() => {
     const activePlayers = [player, playerTwo, playerThree].filter((p) => p && p.isAlive());
 
     if (activePlayers.length <= 1) {
@@ -340,7 +341,7 @@ export const GameScreen = () => {
       resetRound();
       fetchMap().then(setMap);
     }
-  };
+  }, [player, playerTwo, playerThree, resetRound]);
 
   const handleClose = () => {
     setDialogOpen(false);
@@ -357,37 +358,37 @@ export const GameScreen = () => {
       if (monsterTemp.getX() === currentPlayer.getX()
         && monsterTemp.getY() === currentPlayer.getY()
         && currentPlayer.isAlive()
-        && !isPowerUpActive('Invincibility')) {
+        && !isPowerUpActive(currentPlayer.getId(), 'Invincibility')) {
         currentPlayer.killPlayer();
         setPlayer(Player.fromPlayer(currentPlayer));
       }
       if (monsterTemp.getX() === currentPlayerTwo.getX()
         && monsterTemp.getY() === currentPlayerTwo.getY()
         && currentPlayerTwo.isAlive()
-        && !isPowerUpActive('Invincibility')) {
+        && !isPowerUpActive(currentPlayerTwo.getId(), 'Invincibility')) {
         currentPlayerTwo.killPlayer();
         setPlayerTwo(Player.fromPlayer(currentPlayerTwo));
       }
       if (currentPlayerThree && monsterTemp.getX() === currentPlayerThree.getX()
         && monsterTemp.getY() === currentPlayerThree.getY()
         && currentPlayerThree.isAlive()
-        && !isPowerUpActive('Invincibility')) {
+        && !isPowerUpActive(currentPlayerThree.getId(), 'Invincibility')) {
         currentPlayerThree.killPlayer();
         setPlayerThree(Player.fromPlayer(currentPlayerThree));
       }
     });
     checkEndOfRound();
-  }, [player, playerTwo, playerThree, monsters]);
+  }, [isPowerUpActive, checkEndOfRound]);
 
   useEffect(() => {
     checkPlayerMonsterCollision(player, playerTwo, playerThree, monsters);
-  }, [player, playerTwo, monsters, playerThree]);
+  }, [player, playerTwo, monsters, playerThree, checkPlayerMonsterCollision]);
 
   useEffect(() => {
     if (isPaused) return;
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [handleKeyDown]);
+  }, [handleKeyDown, isPaused]);
 
   useEffect(() => {
     const smartInterval = setInterval(moveSmartMonsters, 600);

@@ -73,8 +73,8 @@ type GridCellComponentProps = {
   players: Player[];
   monsters: Monster[];
   map: GameMap;
-  isPowerUpActive: (powerUp: Power) => boolean;
-  isPowerUpFlashing: (powerUp: Power) => boolean;
+  isPowerUpActive: (playerId: string, powerUp: Power) => boolean;
+  isPowerUpFlashing: (playerId: string, powerUp: Power) => boolean;
 }
 
 export const GridCellComponent = ({
@@ -98,7 +98,7 @@ export const GridCellComponent = ({
   const [isFlashing, setIsFlashing] = useState(false);
 
   useEffect(() => {
-    if (player && (isPowerUpFlashing('Ghost') || isPowerUpFlashing('Invincibility'))) {
+    if (player && (isPowerUpFlashing(player.getId(), 'Ghost') || isPowerUpFlashing(player.getId(), 'Invincibility'))) {
       setIsFlashing(true);
       const interval = setInterval(() => {
         setIsFlashing((prev) => !prev);
@@ -115,8 +115,8 @@ export const GridCellComponent = ({
       return playerImages[name]?.normal || playerImages.player1.normal;
     }
     if (playerImages[name]) {
-      if (isPowerUpActive('Ghost')) return playerImages[name].ghost;
-      if (isPowerUpActive('Invincibility')) return playerImages[name].invincible;
+      if (isPowerUpActive(player.getId(), 'Ghost')) return playerImages[name].ghost;
+      if (isPowerUpActive(player.getId(), 'Invincibility')) return playerImages[name].invincible;
       return playerImages[name].normal;
     }
     return playerImages.player1.normal;
