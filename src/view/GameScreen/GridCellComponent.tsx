@@ -1,7 +1,6 @@
+/* eslint-disable consistent-return */
 /* eslint-disable no-shadow */
-/* eslint-disable no-lone-blocks */
-/* eslint-disable no-nested-ternary */
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   CharacterContainer,
   GridCell
@@ -42,21 +41,29 @@ const powerUpImgs = {
   Obstacle: obstacleImage,
 };
 
-const playerImages: Record<string, { normal: string; ghost: string; invincible: string }> = {
+type PlayerImageSet = {
+  normal: string;
+  ghost: string;
+  invincible: string;
+};
+
+type PlayerKey = 'player1' | 'player2' | 'player3';
+
+const playerImages: Record<PlayerKey, PlayerImageSet> = {
   player1: {
     normal: player1Image,
     ghost: player1GhostImage,
-    invincible: player1InvincibleImage
+    invincible: player1InvincibleImage,
   },
   player2: {
     normal: player2Image,
     ghost: player2GhostImage,
-    invincible: player2InvincibleImage
+    invincible: player2InvincibleImage,
   },
   player3: {
     normal: player3Image,
     ghost: player3GhostImage,
-    invincible: player3InvincibleImage
+    invincible: player3InvincibleImage,
   }
 };
 
@@ -67,6 +74,7 @@ type GridCellComponentProps = {
   monsters: Monster[];
   map: GameMap;
   isPowerUpActive: (powerUp: Power) => boolean;
+  isPowerUpFlashing: (powerUp: Power) => boolean;
 }
 
 export const GridCellComponent = ({
@@ -75,7 +83,8 @@ export const GridCellComponent = ({
   players,
   monsters,
   map,
-  isPowerUpActive
+  isPowerUpActive,
+  isPowerUpFlashing
 }: GridCellComponentProps) => {
   const cellContent = map[row][column];
   const isWallCell = cellContent === 'Wall';
@@ -86,14 +95,30 @@ export const GridCellComponent = ({
   const monster = monsters.find((m) => m.getX() === column && m.getY() === row);
   const isEmptyCell = !isWallCell && !isBoxCell;
 
+  const [isFlashing, setIsFlashing] = useState(false);
+
+  useEffect(() => {
+    if (player && (isPowerUpFlashing('Ghost') || isPowerUpFlashing('Invincibility'))) {
+      setIsFlashing(true);
+      const interval = setInterval(() => {
+        setIsFlashing((prev) => !prev);
+      }, 500);
+
+      return () => clearInterval(interval);
+    }
+    setIsFlashing(false);
+  }, [isPowerUpFlashing, player]);
+
   const getPlayerImage = (player: Player) => {
-    const name = player.getName();
+    const name = player.getName() as PlayerKey;
+    if (isFlashing) {
+      return playerImages[name]?.normal || playerImages.player1.normal;
+    }
     if (playerImages[name]) {
       if (isPowerUpActive('Ghost')) return playerImages[name].ghost;
       if (isPowerUpActive('Invincibility')) return playerImages[name].invincible;
       return playerImages[name].normal;
     }
-    // Fallback in case the name doesn't match any key
     return playerImages.player1.normal;
   };
 

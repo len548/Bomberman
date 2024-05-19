@@ -1,6 +1,7 @@
 /* eslint-disable no-console */
 /* eslint-disable max-len */
 /* eslint-disable consistent-return */
+/* eslint-disable react/no-array-index-key */
 import React, {
   useState, useEffect, useCallback, useRef
 } from 'react';
@@ -111,7 +112,7 @@ export const GameScreen = () => {
   } = useBombManager(2, playersRef, setPlayers, mapRef, setMap);
 
   const {
-    addPowerUp, removePowerUp, isPowerUpActive
+    addPowerUp, removePowerUp, isPowerUpActive, isPowerUpFlashing
   } = usePowerUpManager();
 
   const [keyBindings, setKeyBindings] = useState<KeyBindings>({});
@@ -385,7 +386,6 @@ export const GameScreen = () => {
   useEffect(() => {
     if (isPaused) return;
     window.addEventListener('keydown', handleKeyDown);
-    // eslint-disable-next-line consistent-return
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [handleKeyDown]);
 
@@ -432,14 +432,14 @@ export const GameScreen = () => {
 
   const renderCellsAndPlayer = () => map.flatMap((row, rowIndex) => row.map((cell, colIndex) => (
     <GridCellComponent
-      // eslint-disable-next-line react/no-array-index-key
       key={`${rowIndex}-${colIndex}`}
       row={rowIndex}
       column={colIndex}
       players={[player, playerTwo, playerThree].filter((p) => p?.isAlive()) as Player[]}
       monsters={monsters}
       map={map}
-      isPowerUpActive={isPowerUpActive} // Pass this function to GridCellComponent
+      isPowerUpActive={isPowerUpActive}
+      isPowerUpFlashing={isPowerUpFlashing}
     />
   )));
 
