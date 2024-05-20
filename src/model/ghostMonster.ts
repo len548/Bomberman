@@ -37,7 +37,7 @@ class GhostMonster extends Monster {
     return new GhostMonster(this.id, this.name, newX, newY);
   }
 
-  protected isValidMove(
+  isValidMove(
     y: number,
     x: number,
     map: GameMap

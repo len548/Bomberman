@@ -1,24 +1,19 @@
+/* eslint-disable react/no-array-index-key */
 /* eslint-disable max-len */
 /* eslint-disable consistent-return */
-/* eslint-disable react/no-array-index-key */
 import React, {
   useState, useEffect, useCallback, useRef
 } from 'react';
 import SettingsIcon from '@mui/icons-material/Settings';
 import { useParams } from 'react-router-dom';
-import {
-  StyledSettingsButton,
-} from './GameScreen.styles';
+import { StyledSettingsButton } from './GameScreen.styles';
 import { StyledBackground } from '../WelcomeScreen/WelcomeScreen.styles';
 import { Player } from '../../model/player';
 import SettingsScreen from './SettingsScreen/SettingsScreen';
 import { GridCellComponent } from './GridCellComponent';
 import { KeyBindings } from '../../constants/props';
 import {
-  GameMap,
-  Power,
-  gameItem,
-  randomPowerUpGenerator
+  GameMap, Power, gameItem, randomPowerUpGenerator
 } from '../../model/gameItem';
 
 import { Monster } from '../../model/monster';
@@ -114,8 +109,8 @@ export const GameScreen = () => {
   } = useBombManager(2, playersRef, setPlayers, mapRef, setMap, setExplosions, setDestroyedBoxes);
 
   const {
-    addPowerUp, removePowerUp, isPowerUpActive, isPowerUpFlashing
-  } = usePowerUpManager();
+    addPowerUp, removePowerUp, isPowerUpActive, isPowerUpFlashing, clearPowerUps
+  } = usePowerUpManager(mapRef, playersRef, setPlayers);
 
   const [keyBindings, setKeyBindings] = useState<KeyBindings>({});
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -283,6 +278,12 @@ export const GameScreen = () => {
   }, [isPaused, map]);
 
   const resetRound = useCallback(() => {
+    clearPowerUps(player.getId());
+    clearPowerUps(playerTwo.getId());
+    if (playerThree) {
+      clearPowerUps(playerThree.getId());
+    }
+
     setPlayer(new Player('1', playerNames[0], 1, 1, true, 4, 2, [], 0, playerImages[0].original, playerImages[0].ghost, playerImages[0].invincible));
     setPlayerTwo(new Player('2', playerNames[1], 13, 8, true, 4, 2, [], 0, playerImages[1].original, playerImages[1].ghost, playerImages[1].invincible));
     setPlayerThree(numOfPlayers === '3' ? new Player('3', playerNames[2], 1, 8, true, 4, 2, [], 0, playerImages[2].original, playerImages[2].ghost, playerImages[2].invincible) : null);
@@ -328,7 +329,7 @@ export const GameScreen = () => {
         ]);
       }
     }
-  }, [numOfPlayers, selectedMap]);
+  }, [numOfPlayers, selectedMap, player, playerTwo, playerThree, clearPowerUps, playerImages]);
 
   const checkEndOfRound = useCallback(() => {
     if (roundProcessedRef.current) return;
@@ -454,6 +455,12 @@ export const GameScreen = () => {
   };
 
   const handleRestartGame = () => {
+    clearPowerUps(player.getId());
+    clearPowerUps(playerTwo.getId());
+    if (playerThree) {
+      clearPowerUps(playerThree.getId());
+    }
+
     setPlayer(new Player('player1', playerNames[0], 1, 1, true, 4, 2, [], 0, playerImages[0].original, playerImages[0].ghost, playerImages[0].invincible));
     setPlayerTwo(new Player('player2', playerNames[1], 13, 8, true, 4, 2, [], 0, playerImages[1].original, playerImages[1].ghost, playerImages[1].invincible));
     setPlayerThree(numOfPlayers === '3' ? new Player('player3', playerNames[2], 1, 8, true, 4, 2, [], 0, playerImages[2].original, playerImages[2].ghost, playerImages[2].invincible) : null);

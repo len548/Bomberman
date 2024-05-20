@@ -1,4 +1,3 @@
-/* eslint-disable no-unused-vars */
 import { useCallback } from 'react';
 import { Player } from '../model/player';
 import { GameMap, Power } from '../model/gameItem';
