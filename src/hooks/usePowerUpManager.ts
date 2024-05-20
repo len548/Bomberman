@@ -70,12 +70,25 @@ const usePowerUpManager = () => {
     });
   }, []);
 
+  const clearPowerUps = useCallback((playerId: string) => {
+    setActivePowerUps((prev) => {
+      const newSet = new Set<Power>();
+      return { ...prev, [playerId]: newSet };
+    });
+
+    setFlashingPowerUps((prev) => {
+      const newSet = new Set<Power>();
+      return { ...prev, [playerId]: newSet };
+    });
+  }, []);
+
   const isPowerUpActive = useCallback((playerId: string, powerUp: Power) => activePowerUps[playerId]?.has(powerUp) || false, [activePowerUps]);
   const isPowerUpFlashing = useCallback((playerId: string, powerUp: Power) => flashingPowerUps[playerId]?.has(powerUp) || false, [flashingPowerUps]);
 
   return {
     addPowerUp,
     removePowerUp,
+    clearPowerUps,
     isPowerUpActive,
     isPowerUpFlashing,
   };

@@ -1,7 +1,7 @@
+/* eslint-disable react/no-array-index-key */
 /* eslint-disable no-console */
 /* eslint-disable max-len */
 /* eslint-disable consistent-return */
-/* eslint-disable react/no-array-index-key */
 import React, {
   useState, useEffect, useCallback, useRef
 } from 'react';
@@ -113,7 +113,7 @@ export const GameScreen = () => {
   } = useBombManager(2, playersRef, setPlayers, mapRef, setMap);
 
   const {
-    addPowerUp, removePowerUp, isPowerUpActive, isPowerUpFlashing
+    addPowerUp, removePowerUp, isPowerUpActive, isPowerUpFlashing, clearPowerUps
   } = usePowerUpManager();
 
   const [keyBindings, setKeyBindings] = useState<KeyBindings>({});
@@ -279,6 +279,12 @@ export const GameScreen = () => {
   }, [isPaused, map]);
 
   const resetRound = useCallback(() => {
+    clearPowerUps(player.getId());
+    clearPowerUps(playerTwo.getId());
+    if (playerThree) {
+      clearPowerUps(playerThree.getId());
+    }
+
     setPlayer(new Player('1', 'player1', 1, 1, true, 4, 2, [], 0, playerImages[0].original, playerImages[0].ghost, playerImages[0].invincible));
     setPlayerTwo(new Player('2', 'player2', 13, 8, true, 4, 2, [], 0, playerImages[1].original, playerImages[1].ghost, playerImages[1].invincible));
     setPlayerThree(numOfPlayers === '3' ? new Player('3', 'player3', 1, 8, true, 4, 2, [], 0, playerImages[2].original, playerImages[2].ghost, playerImages[2].invincible) : null);
@@ -324,7 +330,7 @@ export const GameScreen = () => {
         ]);
       }
     }
-  }, [numOfPlayers, selectedMap]);
+  }, [numOfPlayers, selectedMap, player, playerTwo, playerThree, clearPowerUps, playerImages]);
 
   const checkEndOfRound = useCallback(() => {
     const activePlayers = [player, playerTwo, playerThree].filter((p) => p && p.isAlive());
@@ -413,6 +419,12 @@ export const GameScreen = () => {
   };
 
   const handleRestartGame = () => {
+    clearPowerUps(player.getId());
+    clearPowerUps(playerTwo.getId());
+    if (playerThree) {
+      clearPowerUps(playerThree.getId());
+    }
+
     setPlayer(new Player('player1', playerNames[0], 1, 1, true, 4, 2, [], 0, playerImages[0].original, playerImages[0].ghost, playerImages[0].invincible));
     setPlayerTwo(new Player('player2', playerNames[1], 13, 8, true, 4, 2, [], 0, playerImages[1].original, playerImages[1].ghost, playerImages[1].invincible));
 
