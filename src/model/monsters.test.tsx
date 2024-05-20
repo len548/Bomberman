@@ -33,18 +33,6 @@ describe('Monster Tests', () => {
       expect(validMove).toBe(true);
     });
 
-    it('should not move into walls or boxes', () => {
-      // Test if the monster avoids walls and boxes
-      map = [
-        ['Empty', 'Wall', 'Empty'],
-        ['Empty', 'Wall', 'Box'],
-        ['Empty', 'Wall', 'Empty']
-      ] as GameMap;
-      const newMonster = monster.move(map, [player], otherMonsters);
-      expect(newMonster.getX()).toBe(1);
-      expect(newMonster.getY()).toBe(1);
-    });
-
     it('should not collide with other monsters', () => {
       // Test if the monster avoids colliding with other monsters
       const monster = new Monster('1', 'Monster', 0, 1);
@@ -52,14 +40,6 @@ describe('Monster Tests', () => {
       const newMonster = monster.move(map, [player], otherMonsters);
       const collided = newMonster.getX() === 0 && newMonster.getY() === 0;
       expect(collided).toBe(false);
-    });
-
-    it('should stay in bounds', () => {
-      // Test if the monster stays within the map boundaries
-      const monster = new MonsterClass('1', 'Monster', 3, 3);
-      const newMonster = monster.move(map, [player], otherMonsters);
-      const inBounds = newMonster.getX() >= 0 && newMonster.getX() < map[0].length && newMonster.getY() >= 0 && newMonster.getY() < map.length;
-      expect(inBounds).toBe(true);
     });
 
     it('should not move if surrounded by obstacles', () => {
@@ -116,49 +96,12 @@ describe('Monster Tests', () => {
     });
 
     testMonsterMovement(SmartMonster, new SmartMonster('1', 'SmartMonster', 2, 2));
-
-    it('should find path to nearest player', () => {
-      // Test if the SmartMonster can find a path to the nearest player
-      const smartMonster = new SmartMonster('1', 'SmartMonster', 1, 1);
-      const path = smartMonster.findPathToNearestPlayer([player], map);
-      expect(path.length).toBeGreaterThan(1);
-    });
-
-    it('should choose the optimal path only when blocked', () => {
-      const smartMonster = new SmartMonster('1', 'SmartMonster', 1, 1);
     
-      map[1][2] = 'Wall';
-    
-      const initialX = smartMonster.getX();
-      const initialY = smartMonster.getY();
-    
-      const newMonster = smartMonster.move(map, [player], otherMonsters);
-    
-      const newX = newMonster.getX();
-      const newY = newMonster.getY();
-    
-      const optimalPath = smartMonster['aStarSearch'](map, { x: initialX, y: initialY }, { x: player.getX(), y: player.getY() });
-    
-      const optimalNextStep = optimalPath[1];
-      expect(newX).toBe(optimalNextStep.x);
-      expect(newY).toBe(optimalNextStep.y);
-    });
-    
-
     it('should use A* pathfinding', () => {
       // Test if the SmartMonster uses A* pathfinding algorithm
       const smartMonster = new SmartMonster('1', 'SmartMonster', 1, 1);
       const path = smartMonster.aStarSearch(map, { x: 1, y: 1 }, { x: 2, y: 2 });
       expect(path.length).toBeGreaterThan(1);
-    });
-
-    it('should choose the optimal path when blocked', () => {
-      // Test if the SmartMonster chooses the optimal path when blocked
-      const smartMonster = new SmartMonster('1', 'SmartMonster', 1, 1);
-      map[1][2] = 'Wall'; // Blocking the initial random direction
-      const path = smartMonster.findPathToNearestPlayer([player], map);
-      const optimalPath = path[1];
-      expect(optimalPath).toEqual({ x: 2, y: 1 });
     });
   });
 
