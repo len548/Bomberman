@@ -206,6 +206,18 @@ class Player {
     this.bombs -= 1;
   }
 
+  removePowerUp(powerUp: Power): void {
+    if (this.powerUps.has(powerUp)) {
+      this.powerUps.delete(powerUp);
+      console.log(`${this.name} has lost the ${powerUp} power-up.`);
+      console.log(`player ${this.id} power-ups: ${Array.from(this.powerUps)}`);
+    }
+  }
+
+  isDetonator(): boolean {
+    return this.powerUps.has('Detonator');
+  }
+
   isInvincible(): boolean {
     return this.powerUps.has('Invincibility');
   }

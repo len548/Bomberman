@@ -20,14 +20,11 @@ export const GameLayout = ({
   <StyledGameDialog open>
     <Grid container spacing={2}>
       <Grid item xs={2} sx={{ mt: 5 }}>
-        <PlayerStatus
-          player={player}
-          index={1}
-        />
+        <PlayerStatus player={player} index={1} />
         {playerThree && (
           <>
             <br />
-            <PlayerStatus player={playerThree} index={2} />
+            <PlayerStatus player={playerThree} index={3} />
           </>
         )}
       </Grid>
@@ -41,8 +38,7 @@ export const GameLayout = ({
         </Paper>
       </Grid>
       <Grid item xs={2} sx={{ mt: playerThree ? 15 : 5 }}>
-        {!playerThree && <PlayerStatus player={playerTwo} index={2} />}
-        {playerThree && <PlayerStatus player={playerThree} index={3} />}
+        <PlayerStatus player={playerTwo} index={2} />
       </Grid>
     </Grid>
   </StyledGameDialog>

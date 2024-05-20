@@ -5,14 +5,24 @@ import {
   DialogTitle,
   Button
 } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
 
 type RoundResultDialogProps = {
   open: boolean;
   onClose: () => void;
   resultMessage: string;
+  isGameOver: boolean;
 }
 
-export const RoundResultDialog = ({ open, onClose, resultMessage }: RoundResultDialogProps) => {
+export const RoundResultDialog = (
+  {
+    open,
+    onClose,
+    resultMessage,
+    isGameOver
+  }: RoundResultDialogProps
+) => {
+  const navigate = useNavigate();
   const handleClose = (event: object, reason: string) => {
     if (reason === 'backdropClick' || reason === 'escapeKeyDown') {
       return;
@@ -32,7 +42,7 @@ export const RoundResultDialog = ({ open, onClose, resultMessage }: RoundResultD
           alignItems: 'center'
         }}
       >
-        Round Over
+        {isGameOver ? 'Game Over!' : 'Round Over'}
       </DialogTitle>
       <DialogContent
         sx={{
@@ -44,7 +54,17 @@ export const RoundResultDialog = ({ open, onClose, resultMessage }: RoundResultD
         }}
       >
         <p>{resultMessage}</p>
-        <Button onClick={onClose}>Restart</Button>
+
+        {isGameOver
+          ? (
+            <>
+              <Button onClick={() => navigate('/config')} variant="outlined">Start New Game</Button>
+              <Button onClick={() => navigate('/')} variant="outlined">Back to Home</Button>
+            </>
+          )
+          : (
+            <Button onClick={onClose} variant="outlined">Next Round</Button>
+          )}
       </DialogContent>
     </Dialog>
   );
