@@ -103,6 +103,11 @@ describe('Monster Tests', () => {
       const path = smartMonster.aStarSearch(map, { x: 1, y: 1 }, { x: 2, y: 2 });
       expect(path.length).toBeGreaterThan(1);
     });
+    it('should correctly calculate heuristic distance', () => {
+      const smartMonster = new SmartMonster('1', 'SmartMonster', 1, 1);
+      const distance = smartMonster.heuristic({ x: 1, y: 1 }, { x: 4, y: 5 });
+      expect(distance).toBe(7); // 3 (x) + 4 (y) = 7
+    });
   });
 
   describe('ForkMonster Specific Tests', () => {
