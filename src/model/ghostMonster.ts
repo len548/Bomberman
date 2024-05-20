@@ -42,7 +42,7 @@ class GhostMonster extends Monster {
     x: number,
     map: GameMap
   ): boolean {
-    return (!(isBomb(map[y][x])) && map[y][x] !== 'Wall');
+    return (!(isBomb(map[x][y])) && map[x][y] !== 'Wall');
   }
 }
 
