@@ -1,6 +1,5 @@
 /* eslint-disable no-unused-vars */
 /* eslint-disable class-methods-use-this */
-/* eslint-disable no-console */
 
 import { Monster } from './monster';
 import monsterImg from '../assets/ghostmonster.png';

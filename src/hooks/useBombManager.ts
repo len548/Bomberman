@@ -3,7 +3,7 @@
 import { useCallback } from 'react';
 import { Player } from '../model/player';
 import {
-  Bomb, GameMap, isObstacle, randomPowerUpGenerator
+  Bomb, GameMap, isObstacle, isBomb, randomPowerUpGenerator
 } from '../model/gameItem';
 
 export const useBombManager = (
@@ -13,12 +13,14 @@ export const useBombManager = (
   mapRef: React.MutableRefObject<GameMap>,
   setMap: (m: GameMap) => void
 ) => {
-  const explodeBomb = useCallback((y: number, x: number, bomb: Bomb): void => {
+  const bombExplosionCheck = useCallback((
+    bomb: Bomb,
+    positionsToCheck: { newY: number; newX: number }[],
+    currentMap: GameMap
+  ): void => {
+    const { x, y } = bomb.coords;
     const blastRange = bomb.range;
-    const map = mapRef.current;
-    const newMap: GameMap = [];
-    map.map((row) => newMap.push([...row]));
-    const positionsToCheck = [];
+    const map = currentMap;
     const mapHeight = map.length;
     const mapWidth = map[0].length;
 
@@ -26,14 +28,18 @@ export const useBombManager = (
     for (let dy = -1; dy >= -blastRange; dy -= 1) {
       const tempY = y + dy;
       if (tempY >= 0 && tempY < mapHeight) {
-        positionsToCheck.push({ newY: tempY, newX: x });
+        if (!positionsToCheck.some((pos) => pos.newY === tempY && pos.newX === x)) {
+          positionsToCheck.push({ newY: tempY, newX: x });
+        }
         if (map[tempY][x] === 'Wall' || map[tempY][x] === 'Box' || isObstacle(map[tempY][x])) break;
       } else break;
     }
     for (let dy = 1; dy <= blastRange; dy += 1) {
       const tempY = y + dy;
       if (tempY >= 0 && tempY < mapHeight) {
-        positionsToCheck.push({ newY: tempY, newX: x });
+        if (!positionsToCheck.some((pos) => pos.newY === tempY && pos.newX === x)) {
+          positionsToCheck.push({ newY: tempY, newX: x });
+        }
         if (map[tempY][x] === 'Wall' || map[tempY][x] === 'Box' || isObstacle(map[tempY][x])) break;
       } else break;
     }
@@ -42,7 +48,9 @@ export const useBombManager = (
     for (let dx = -1; dx >= -blastRange; dx -= 1) {
       const tempX = x + dx;
       if (tempX >= 0 && tempX < mapWidth) {
-        positionsToCheck.push({ newY: y, newX: tempX });
+        if (!positionsToCheck.some((pos) => pos.newY === y && pos.newX === tempX)) {
+          positionsToCheck.push({ newY: y, newX: tempX });
+        }
         if (map[y][tempX] === 'Wall' || map[y][tempX] === 'Box' || isObstacle(map[y][tempX])) break;
       } else break;
     }
@@ -50,15 +58,25 @@ export const useBombManager = (
     for (let dx = 1; dx <= blastRange; dx += 1) {
       const tempX = x + dx;
       if (tempX >= 0 && tempX < mapWidth) {
-        positionsToCheck.push({ newY: y, newX: tempX });
+        if (!positionsToCheck.some((pos) => pos.newY === y && pos.newX === tempX)) {
+          positionsToCheck.push({ newY: y, newX: tempX });
+        }
         if (map[y][tempX] === 'Wall' || map[y][tempX] === 'Box' || isObstacle(map[y][tempX])) break;
       } else break;
     }
+  }, [mapRef, setMap, playersRef, setPlayers]);
 
+  const explodeBombs = useCallback((bombs: Bomb[]): void => {
+    const positionsToCheck: { newY: number; newX: number; }[] = [];
+    const map = mapRef.current;
+    const newMap: GameMap = map.map((row) => [...row]);
+
+    bombs.forEach((bomb) => {
+      bombExplosionCheck(bomb, positionsToCheck, map);
+      newMap[bomb.coords.y][bomb.coords.x] = 'Empty'; // Remove the bomb from the map
+    });
     positionsToCheck.forEach(({ newY, newX }) => {
       const affectedItem = map[newY][newX];
-      console.log(`newY: ${newY}, newX: ${newX}`);
-      console.log(affectedItem);
 
       // TODO: Trigger other bombs
       // if (typeof affectedItem !== 'string' && 'range' in affectedItem) {
@@ -78,27 +96,40 @@ export const useBombManager = (
         }
       });
     });
-    newMap[y][x] = 'Empty'; // Remove the bomb from the map
-
     // Update the map with changes
     setMap(newMap);
-
-    // Check and update players' positions if they are in the blast range
   }, [mapRef, setMap, playersRef, setPlayers]);
 
   const dropBomb = useCallback((y: number, x: number): void => {
+    const player = playersRef.current[playerID];
     const map = mapRef.current;
+
+    if (player.getBombs() <= 0) {
+      if (!player.isDetonator()) return;
+      console.log('Detonator power activated!');
+      // Handling detonator power
+      const bombs: Bomb[] = [];
+      map.forEach((row) => {
+        row.forEach((cell) => {
+          if (isBomb(cell) && cell.ownerId === player.getId()) {
+            bombs.push(cell);
+          }
+        });
+      });
+      explodeBombs(bombs);
+      player.removePowerUp('Detonator');
+      setPlayers[playerID](Player.fromPlayer(player));
+      return;
+    }
+
     if (map[y][x] !== 'Empty') return; // Ensure the cell is empty before placing a bomb
 
-    const player = playersRef.current[playerID];
-    if (player.getBombs() <= 0) return; // Ensure the player has bombs left
     player.decrementBombs();
     const bomb: Bomb = {
       ownerId: player.getId(),
       coords: { x, y },
       range: player.getBombRange(), // Assuming getBombRange is a method of Player
     };
-
     // Place the bomb in the map
     const newMap = map.map((row) => [...row]);
     newMap[y][x] = bomb;
@@ -107,10 +138,11 @@ export const useBombManager = (
     setPlayers[playerID](Player.fromPlayer(player));
 
     // Set a timer for the bomb to explode
+    if (player.isDetonator()) return; // Skip if the player has Detonator power
     setTimeout(() => {
-      explodeBomb(y, x, bomb);
+      explodeBombs([bomb]);
     }, 3000); // Explodes after 3 seconds
-  }, [mapRef, setMap, playersRef, explodeBomb]);
+  }, [mapRef, setMap, playersRef, explodeBombs]);
 
   return { dropBomb };
 };
