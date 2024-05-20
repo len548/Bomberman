@@ -79,6 +79,7 @@ export const useBombManager = (
       const owner = playersRef.current.find((player) => player.getId() === bomb.ownerId);
       if (owner) {
         owner.decrementActiveBombs(); // Decrement active bombs for the owner
+        setPlayers[playersRef.current.indexOf(owner)](Player.fromPlayer(owner));
       }
     });
 
@@ -117,6 +118,14 @@ export const useBombManager = (
         }
       });
     });
+
+    // Trigger chain reaction for other bombs in the explosion range
+    const triggeredBombs = positionsToCheck
+      .map(({ newX, newY }) => map[newY][newX])
+      .filter(isBomb) as Bomb[];
+    if (triggeredBombs.length > 0) {
+      setTimeout(() => explodeBombs(triggeredBombs), 0);
+    }
 
     setDestroyedBoxes(newDestroyedBoxes);
 
