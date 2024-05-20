@@ -101,15 +101,17 @@ export const GameScreen = () => {
   const playersRef = useRef([player, playerTwo, playerThree].filter((p): p is Player => p !== null));
   playersRef.current = [player, playerTwo, playerThree].filter((p): p is Player => p !== null);
   const setPlayers = [setPlayer, setPlayerTwo, setPlayerThree];
+  const [explosions, setExplosions] = useState<{ x: number, y: number }[]>([]);
+  const [destroyedBoxes, setDestroyedBoxes] = useState<{ x: number, y: number }[]>([]);
   const {
     dropBomb: dropPlayerOneBomb
-  } = useBombManager(0, playersRef, setPlayers, mapRef, setMap);
+  } = useBombManager(0, playersRef, setPlayers, mapRef, setMap, setExplosions, setDestroyedBoxes);
   const {
     dropBomb: dropPlayerTwoBomb
-  } = useBombManager(1, playersRef, setPlayers, mapRef, setMap);
+  } = useBombManager(1, playersRef, setPlayers, mapRef, setMap, setExplosions, setDestroyedBoxes);
   const {
     dropBomb: dropPlayerThreeBomb
-  } = useBombManager(2, playersRef, setPlayers, mapRef, setMap);
+  } = useBombManager(2, playersRef, setPlayers, mapRef, setMap, setExplosions, setDestroyedBoxes);
 
   const {
     addPowerUp, removePowerUp, isPowerUpActive, isPowerUpFlashing
@@ -481,6 +483,8 @@ export const GameScreen = () => {
       map={map}
       isPowerUpActive={isPowerUpActive}
       isPowerUpFlashing={isPowerUpFlashing}
+      explosions={explosions} // Pass explosions prop
+      destroyedBoxes={destroyedBoxes} // Pass destroyed boxes prop
     />
   )));
 

@@ -11,7 +11,9 @@ export const useBombManager = (
   playersRef: React.MutableRefObject<Player[]>,
   setPlayers: ((player: Player) => void)[],
   mapRef: React.MutableRefObject<GameMap>,
-  setMap: (m: GameMap) => void
+  setMap: (m: GameMap) => void,
+  setExplosions: (explosions: { x: number, y: number }[]) => void,
+  setDestroyedBoxes: (destroyedBoxes: { x: number, y: number }[]) => void
 ) => {
   const bombExplosionCheck = useCallback((
     bomb: Bomb,
@@ -75,6 +77,15 @@ export const useBombManager = (
       bombExplosionCheck(bomb, positionsToCheck, map);
       newMap[bomb.coords.y][bomb.coords.x] = 'Empty'; // Remove the bomb from the map
     });
+
+    // eslint-disable-next-line max-len
+    const explosionPositions: { x: number, y: number }[] = positionsToCheck.map(({ newX, newY }) => ({ x: newX, y: newY }));
+
+    // Display explosion image
+    setExplosions(explosionPositions);
+
+    const newDestroyedBoxes: { x: number, y: number }[] = [];
+
     positionsToCheck.forEach(({ newY, newX }) => {
       const affectedItem = map[newY][newX];
 
@@ -85,7 +96,13 @@ export const useBombManager = (
 
       // Destroy boxes and potentially drop power-ups
       if (affectedItem === 'Box') {
-        newMap[newY][newX] = randomPowerUpGenerator(); // Replace with a power-up or empty
+        newDestroyedBoxes.push({ x: newX, y: newY });
+        newMap[newY][newX] = 'Empty'; // Initially set to empty, will be shown as destroyed first
+        setTimeout(() => {
+          // eslint-disable-next-line max-len
+          newMap[newY][newX] = randomPowerUpGenerator(); // Replace with a power-up or empty after delay
+          setMap([...newMap]);
+        }, 500); // Delay to show the destroyed box image
       }
 
       playersRef.current.forEach((player, index) => {
@@ -96,9 +113,17 @@ export const useBombManager = (
         }
       });
     });
+
+    setDestroyedBoxes(newDestroyedBoxes);
+
+    setTimeout(() => {
+      setExplosions([]); // Clear explosions after a short duration
+      setDestroyedBoxes([]);
+    }, 500); // Explosion image duration in milliseconds
+
     // Update the map with changes
     setMap(newMap);
-  }, [mapRef, setMap, playersRef, setPlayers]);
+  }, [mapRef, setMap, playersRef, setPlayers, setExplosions]);
 
   const dropBomb = useCallback((y: number, x: number): void => {
     const player = playersRef.current[playerID];

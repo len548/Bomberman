@@ -15,6 +15,8 @@ import rollerSkateImage from '../../assets/rollerskate.png';
 import invincibilityImage from '../../assets/invincibility.png';
 import ghostImage from '../../assets/ghost.png';
 import obstacleImage from '../../assets/obstacle.png';
+import fireImage from '../../assets/fire.jpeg'; // added this
+import destroyedBoxImage from '../../assets/destroyed_box.png'; // Import destroyed box image
 import { Player } from '../../model/player';
 import { Monster } from '../../model/monster';
 import {
@@ -75,6 +77,8 @@ type GridCellComponentProps = {
   map: GameMap;
   isPowerUpActive: (playerId: string, powerUp: Power) => boolean;
   isPowerUpFlashing: (playerId: string, powerUp: Power) => boolean;
+  explosions: { x: number, y: number }[]; // Add explosions prop
+  destroyedBoxes: { x: number, y: number }[]; // Add destroyed boxes prop
 }
 
 export const GridCellComponent = ({
@@ -84,7 +88,9 @@ export const GridCellComponent = ({
   monsters,
   map,
   isPowerUpActive,
-  isPowerUpFlashing
+  isPowerUpFlashing,
+  explosions, // Add explosions prop
+  destroyedBoxes
 }: GridCellComponentProps) => {
   const cellContent = map[row][column];
   const isWallCell = cellContent === 'Wall';
@@ -122,10 +128,14 @@ export const GridCellComponent = ({
     return playerImages.player1.normal;
   };
 
+  const isExplosion = explosions.some((e) => e.x === column && e.y === row);
+  const isDestroyedBox = destroyedBoxes.some((b) => b.x === column && b.y === row);
+
   return (
     <GridCell isWall={isWallCell} style={{ backgroundColor: isEmptyCell ? 'green' : 'transparent' }}>
       {isWallCell && <img src={wallImage} alt="Wall" style={{ width: '100%', height: '100%' }} />}
-      {isBoxCell && <img src={boxImage} alt="Box" style={{ width: '100%', height: '100%' }} />}
+      {isBoxCell && !isExplosion && !isDestroyedBox && <img src={boxImage} alt="Box" style={{ width: '100%', height: '100%' }} />}
+      {isBoxCell && isDestroyedBox && <img src={destroyedBoxImage} alt="Destroyed Box" style={{ width: '100%', height: '100%' }} />}
       {isPowerUpCell && <img src={powerUpImgs[cellContent]} alt="PowerUp" style={{ width: '100%', height: '100%' }} />}
       {player && player.isAlive() && (
         <CharacterContainer>
@@ -142,6 +152,7 @@ export const GridCellComponent = ({
         </CharacterContainer>
       )}
       {isBombCell && <img src={bombImage} alt="Bomb" style={{ width: '100%', height: '100%' }} />}
+      {isExplosion && !isBoxCell && <img src={fireImage} alt="Explosion" className="explosion-image" style={{ width: '100%', height: '100%' }} />}
     </GridCell>
   );
 };
