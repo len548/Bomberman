@@ -76,6 +76,10 @@ export const useBombManager = (
     bombs.forEach((bomb) => {
       bombExplosionCheck(bomb, positionsToCheck, map);
       newMap[bomb.coords.y][bomb.coords.x] = 'Empty'; // Remove the bomb from the map
+      const owner = playersRef.current.find((player) => player.getId() === bomb.ownerId);
+      if (owner) {
+        owner.decrementActiveBombs(); // Decrement active bombs for the owner
+      }
     });
 
     // eslint-disable-next-line max-len
@@ -147,9 +151,11 @@ export const useBombManager = (
       return;
     }
 
+    if (!player.canPlaceBomb()) return; // Ensure the player can place a bomb
+
     if (map[y][x] !== 'Empty') return; // Ensure the cell is empty before placing a bomb
 
-    player.decrementBombs();
+    player.incrementActiveBombs();
     const bomb: Bomb = {
       ownerId: player.getId(),
       coords: { x, y },
