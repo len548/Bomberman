@@ -91,7 +91,7 @@ class Player {
     removePowerUp: (powerUp: Power) => void,
     isPowerUpActive: (powerUp: Power) => boolean
   ): Player {
-    const moveDistance = this.powerUps.has('RollerSkate') ? 2 : 1;
+    const moveDistance = this.powerUps.includes('RollerSkate') ? 2 : 1;
 
     for (let i = 0; i < moveDistance; i += 1) {
       let newX = this.x;
@@ -136,8 +136,8 @@ class Player {
         this.bombRange += 1;
         break;
       case 'Detonator':
-        if (!this.powerUps.has('Detonator')) {
-          this.powerUps.add(powerUp);
+        if (!this.powerUps.includes('Detonator')) {
+          this.powerUps.push(powerUp);
         }
         break;
       case 'RollerSkate':
