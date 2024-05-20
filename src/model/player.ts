@@ -174,7 +174,7 @@ class Player {
     isPowerUpActive: (powerUp: Power) => boolean
   ): boolean {
     if (isPowerUpActive('Ghost')) {
-      return !isObstacle(map[y][x]) && this.isInBounds(x, y);
+      return !isObstacle(map[y][x]);
     }
     return map[y][x] !== 'Wall' && map[y][x] !== 'Box' && !isObstacle(map[y][x]) && !isBomb(map[y][x]) && (map[y][x] === 'Empty' || isPower(map[y][x]));
   }
