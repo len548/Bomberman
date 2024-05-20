@@ -96,7 +96,7 @@ describe('Monster Tests', () => {
     });
 
     testMonsterMovement(SmartMonster, new SmartMonster('1', 'SmartMonster', 2, 2));
-    
+
     it('should use A* pathfinding', () => {
       // Test if the SmartMonster uses A* pathfinding algorithm
       const smartMonster = new SmartMonster('1', 'SmartMonster', 1, 1);
