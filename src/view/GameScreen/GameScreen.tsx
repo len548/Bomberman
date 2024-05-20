@@ -6,19 +6,14 @@ import React, {
 } from 'react';
 import SettingsIcon from '@mui/icons-material/Settings';
 import { useParams } from 'react-router-dom';
-import {
-  StyledSettingsButton,
-} from './GameScreen.styles';
+import { StyledSettingsButton } from './GameScreen.styles';
 import { StyledBackground } from '../WelcomeScreen/WelcomeScreen.styles';
 import { Player } from '../../model/player';
 import SettingsScreen from './SettingsScreen/SettingsScreen';
 import { GridCellComponent } from './GridCellComponent';
 import { KeyBindings } from '../../constants/props';
 import {
-  GameMap,
-  Power,
-  gameItem,
-  randomPowerUpGenerator
+  GameMap, Power, gameItem, randomPowerUpGenerator
 } from '../../model/gameItem';
 
 import { Monster } from '../../model/monster';
@@ -113,7 +108,7 @@ export const GameScreen = () => {
 
   const {
     addPowerUp, removePowerUp, isPowerUpActive, isPowerUpFlashing, clearPowerUps
-  } = usePowerUpManager();
+  } = usePowerUpManager(mapRef, playersRef, setPlayers);
 
   const [keyBindings, setKeyBindings] = useState<KeyBindings>({});
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);

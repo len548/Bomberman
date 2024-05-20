@@ -2,10 +2,11 @@
 /* eslint-disable consistent-return */
 /* eslint-disable max-len */
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { useState, useCallback } from 'react';
-import { Power } from '../model/gameItem';
+import { useState, useCallback, useEffect } from 'react';
+import { Power, GameMap, isObstacle } from '../model/gameItem';
+import { Player } from '../model/player';
 
-const usePowerUpManager = () => {
+const usePowerUpManager = (mapRef: React.MutableRefObject<GameMap>, playersRef: React.MutableRefObject<Player[]>, setPlayers: ((player: Player) => void)[]) => {
   const [activePowerUps, setActivePowerUps] = useState<Record<string, Set<Power>>>({});
   const [flashingPowerUps, setFlashingPowerUps] = useState<Record<string, Set<Power>>>({});
 
@@ -48,13 +49,27 @@ const usePowerUpManager = () => {
           newSet.delete(powerUp);
           return { ...prev, [playerId]: newSet };
         });
+
+        // Handle the expiration of the Ghost power-up
+        if (powerUp === 'Ghost') {
+          const player = playersRef.current.find((p) => p.getId() === playerId);
+          if (player) {
+            const map = mapRef.current;
+            const currentCell = map[player.getY()][player.getX()];
+            if (currentCell === 'Wall' || currentCell === 'Box' || isObstacle(currentCell)) {
+              player.killPlayer();
+              const playerIndex = playersRef.current.findIndex((p) => p.getId() === playerId);
+              setPlayers[playerIndex](Player.fromPlayer(player));
+            }
+          }
+        }
       }, 3000);
 
       return () => clearTimeout(expireTimeout);
     }, duration - 3000);
 
     return () => clearTimeout(timeout);
-  }, [activePowerUps]);
+  }, [activePowerUps, mapRef, playersRef, setPlayers]);
 
   const removePowerUp = useCallback((playerId: string, powerUp: Power) => {
     setActivePowerUps((prev) => {
