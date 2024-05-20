@@ -1,5 +1,4 @@
 /* eslint-disable react/no-array-index-key */
-/* eslint-disable no-console */
 /* eslint-disable max-len */
 /* eslint-disable consistent-return */
 import React, {
@@ -46,7 +45,7 @@ import usePowerUpManager from '../../hooks/usePowerUpManager';
 import { usePlayerActions } from '../../hooks/usePlayerActions';
 import { defaultMap } from '../../constants/contants';
 
-const playerNames = ['Player One', 'Player Two', 'Player Three'];
+const playerNames = ['player1', 'player2', 'player3'];
 
 const fetchMap = async (): Promise<GameMap> => {
   let mapData = JSON.parse(localStorage.getItem('selectedMap') || '[]');
@@ -94,9 +93,9 @@ export const GameScreen = () => {
     },
   ];
 
-  const [player, setPlayer] = useState(new Player('1', 'player1', 1, 1, true, 4, 2, [], 0, playerImages[0].original, playerImages[0].ghost, playerImages[0].invincible));
-  const [playerTwo, setPlayerTwo] = useState(new Player('2', 'player2', 13, 8, true, 4, 2, [], 0, playerImages[1].original, playerImages[1].ghost, playerImages[1].invincible));
-  const [playerThree, setPlayerThree] = useState(numOfPlayers === '3' ? new Player('3', 'player3', 7, 7, true, 4, 2, [], 0, playerImages[2].original, playerImages[2].ghost, playerImages[2].invincible) : null);
+  const [player, setPlayer] = useState(new Player('player1', playerNames[0], 1, 1, true, 4, 2, [], 0, playerImages[0].original, playerImages[0].ghost, playerImages[0].invincible));
+  const [playerTwo, setPlayerTwo] = useState(new Player('player2', playerNames[1], 13, 8, true, 4, 2, [], 0, playerImages[1].original, playerImages[1].ghost, playerImages[1].invincible));
+  const [playerThree, setPlayerThree] = useState(numOfPlayers === '3' ? new Player('player3', playerNames[2], 1, 8, true, 4, 2, [], 0, playerImages[2].original, playerImages[2].ghost, playerImages[2].invincible) : null);
   const [map, setMap] = useState<GameMap>([]);
   const mapRef = useRef(map);
   const playersRef = useRef([player, playerTwo, playerThree].filter((p): p is Player => p !== null));
@@ -123,6 +122,10 @@ export const GameScreen = () => {
   const [monsters, setMonsters] = useState([] as Monster[]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [resultMessage, setResultMessage] = useState('');
+  const [currentRound, setCurrentRound] = useState(1);
+  const [roundWinners, setRoundWinners] = useState([] as string[]);
+  const roundProcessedRef = useRef(false);
+  const totalRounds = parseInt(numOfRounds ?? '0', 10);
   useEffect(() => {
     switch (selectedMap) {
       case 'map1':
@@ -177,7 +180,6 @@ export const GameScreen = () => {
   useEffect(() => {
     if (map.length === 0) {
       fetchMap().then(setMap);
-      console.log(numOfRounds);
     }
     mapRef.current = map;
   }, []);
@@ -285,9 +287,9 @@ export const GameScreen = () => {
       clearPowerUps(playerThree.getId());
     }
 
-    setPlayer(new Player('1', 'player1', 1, 1, true, 4, 2, [], 0, playerImages[0].original, playerImages[0].ghost, playerImages[0].invincible));
-    setPlayerTwo(new Player('2', 'player2', 13, 8, true, 4, 2, [], 0, playerImages[1].original, playerImages[1].ghost, playerImages[1].invincible));
-    setPlayerThree(numOfPlayers === '3' ? new Player('3', 'player3', 1, 8, true, 4, 2, [], 0, playerImages[2].original, playerImages[2].ghost, playerImages[2].invincible) : null);
+    setPlayer(new Player('1', playerNames[0], 1, 1, true, 4, 2, [], 0, playerImages[0].original, playerImages[0].ghost, playerImages[0].invincible));
+    setPlayerTwo(new Player('2', playerNames[1], 13, 8, true, 4, 2, [], 0, playerImages[1].original, playerImages[1].ghost, playerImages[1].invincible));
+    setPlayerThree(numOfPlayers === '3' ? new Player('3', playerNames[2], 1, 8, true, 4, 2, [], 0, playerImages[2].original, playerImages[2].ghost, playerImages[2].invincible) : null);
     if (selectedMap === 'map1') {
       if (numOfPlayers === '3') {
         setMonsters([
@@ -333,25 +335,62 @@ export const GameScreen = () => {
   }, [numOfPlayers, selectedMap, player, playerTwo, playerThree, clearPowerUps, playerImages]);
 
   const checkEndOfRound = useCallback(() => {
+    if (roundProcessedRef.current) return;
     const activePlayers = [player, playerTwo, playerThree].filter((p) => p && p.isAlive());
 
     if (activePlayers.length <= 1) {
+      roundProcessedRef.current = true;
       const recheckedActivePlayers = [player, playerTwo, playerThree].filter((p) => p && p.isAlive());
+      let winnerMessage = '';
+      const updatedRoundWinners = [...roundWinners];
       if (recheckedActivePlayers.length === 1) {
-        setResultMessage(`${recheckedActivePlayers[0]?.getName()} wins the round!`);
+        const winnerName = recheckedActivePlayers[0]?.getName() || '';
+        updatedRoundWinners.push(winnerName);
+        winnerMessage = `${winnerName} wins the round!`;
       } else if (recheckedActivePlayers.length === 0) {
-        setResultMessage('No players left, draw!');
+        updatedRoundWinners.push('draw');
+        winnerMessage = 'No players left, draw!';
       }
+      setResultMessage(winnerMessage);
+      setRoundWinners(updatedRoundWinners);
       setDialogOpen(true);
       setIsPaused(true);
-      resetRound();
-      fetchMap().then(setMap);
+      if (currentRound < totalRounds) {
+        setCurrentRound(currentRound + 1);
+        resetRound();
+        fetchMap().then(setMap);
+      } else {
+        setCurrentRound(currentRound + 1);
+        const playerOneWins = updatedRoundWinners.filter((winner) => winner === 'player1').length;
+        const playerTwoWins = updatedRoundWinners.filter((winner) => winner === 'player2').length;
+        const playerThreeWins = updatedRoundWinners.filter((winner) => winner === 'player3').length;
+
+        let gameOverMessage = '';
+        if (playerOneWins > playerTwoWins && playerOneWins > playerThreeWins) {
+          gameOverMessage += 'Player One is the winner of the game!';
+        } else if (playerTwoWins > playerOneWins && playerTwoWins > playerThreeWins) {
+          gameOverMessage += 'Player Two is the winner of the game!';
+        } else if (playerThreeWins > playerOneWins && playerThreeWins > playerTwoWins) {
+          gameOverMessage += 'Player Three is the winner of the game!';
+        } else {
+          gameOverMessage += 'The game ended in a draw!';
+        }
+        setResultMessage(gameOverMessage);
+      }
     }
-  }, [player, playerTwo, playerThree, resetRound]);
+  }, [player, playerTwo, playerThree, resetRound, currentRound, totalRounds, roundWinners]);
 
   const handleClose = () => {
     setDialogOpen(false);
     setIsPaused(false);
+    roundProcessedRef.current = false;
+    if (currentRound <= totalRounds) {
+      resetRound();
+      fetchMap().then(setMap);
+    } else {
+      setCurrentRound(1);
+      setRoundWinners([]);
+    }
   };
 
   const checkPlayerMonsterCollision = useCallback((
@@ -427,6 +466,7 @@ export const GameScreen = () => {
 
     setPlayer(new Player('player1', playerNames[0], 1, 1, true, 4, 2, [], 0, playerImages[0].original, playerImages[0].ghost, playerImages[0].invincible));
     setPlayerTwo(new Player('player2', playerNames[1], 13, 8, true, 4, 2, [], 0, playerImages[1].original, playerImages[1].ghost, playerImages[1].invincible));
+    setPlayerThree(numOfPlayers === '3' ? new Player('player3', playerNames[2], 1, 8, true, 4, 2, [], 0, playerImages[2].original, playerImages[2].ghost, playerImages[2].invincible) : null);
 
     setMonsters([
       new SmartMonster('monster1', 'Monster 1', 5, 5),
@@ -458,7 +498,12 @@ export const GameScreen = () => {
 
   return (
     <StyledBackground>
-      <RoundResultDialog open={dialogOpen} onClose={handleClose} resultMessage={resultMessage} />
+      <RoundResultDialog
+        open={dialogOpen}
+        onClose={handleClose}
+        resultMessage={resultMessage}
+        isGameOver={currentRound > totalRounds}
+      />
       <StyledSettingsButton onClick={handleOpenSettings}>
         <SettingsIcon />
       </StyledSettingsButton>

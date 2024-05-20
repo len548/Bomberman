@@ -24,10 +24,10 @@ describe('Player', () => {
       ghost: 'path_to_ghost_image',
       invincible: 'path_to_invincible_image',
     };
-    otherPlayers = [new Player('2', 'Player Two', 5, 5, true, 4, 2, [], 0, playerImages.original, playerImages.ghost, playerImages.invincible)];
+    otherPlayers = [new Player('2', 'player2', 5, 5, true, 4, 2, [], 0, playerImages.original, playerImages.ghost, playerImages.invincible)];
 
     // Create a player with initial position (1,1)
-    player = new Player('1', 'Player One', 1, 1, true, 4, 2, [], 0, playerImages.original, playerImages.ghost, playerImages.invincible);
+    player = new Player('1', 'player1', 1, 1, true, 4, 2, [], 0, playerImages.original, playerImages.ghost, playerImages.invincible);
   });
 
   it('should move up correctly', () => {
@@ -53,13 +53,13 @@ describe('Player', () => {
   });
 
   it('should not collide with another player', () => {
-    player = new Player('1', 'Player One', 4, 5, true, 4, 2, [], 0, 'path_to_original_image', 'path_to_ghost_image', 'path_to_invincible_image');
+    player = new Player('1', 'player1', 4, 5, true, 4, 2, [], 0, 'path_to_original_image', 'path_to_ghost_image', 'path_to_invincible_image');
     player.move('right', map, otherPlayers, setMap, addPowerUp, removePowerUp, isPowerUpActive);
     expect(player.getX()).toBe(4); // X should not change because another player is at (5, 5)
   });
 
   it('can move freely in open space', () => {
-    player = new Player('1', 'Player One', 3, 3, true, 4, 2, [], 0, 'path_to_original_image', 'path_to_ghost_image', 'path_to_invincible_image');
+    player = new Player('1', 'player1', 3, 3, true, 4, 2, [], 0, 'path_to_original_image', 'path_to_ghost_image', 'path_to_invincible_image');
     player.move('right', map, otherPlayers, setMap, addPowerUp, removePowerUp, isPowerUpActive);
     expect(player.getX()).toBe(4); // X should change to 4
   });
