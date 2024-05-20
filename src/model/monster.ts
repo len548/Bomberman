@@ -79,6 +79,10 @@ class Monster {
     map: GameMap,
     otherMonsters: Monster[]
   ): boolean {
+    const mapHeight = map.length;
+    const mapWidth = map[0].length;
+    if (x < 0 || x >= mapWidth || y < 0 || y >= mapHeight) return false;
+
     const isCellFree = map[y][x] === 'Empty';
     const isMonsterCollision = otherMonsters.some((monster) => monster.getX() === x && monster.getY() === y);
     return isCellFree && !isMonsterCollision;
