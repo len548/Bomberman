@@ -9,13 +9,13 @@ import monsterImg from '../assets/monster.png';
 import { Point } from '../constants/props';
 /* eslint-disable no-plusplus */
 class Monster {
-  protected id: string;
+  id: string;
 
-  protected name: string;
+  name: string;
 
-  protected x: number;
+  x: number;
 
-  protected y: number;
+  y: number;
 
   constructor(id: string, name: string, x: number = 0, y: number = 0) {
     this.id = id;
@@ -69,16 +69,20 @@ class Monster {
     return new Monster(this.id, this.name, newX, newY);
   }
 
-  protected isInBounds(point: Point): boolean {
+  isInBounds(point: Point): boolean {
     return point.x >= 1 && point.x < 14 && point.y >= 1 && point.y < 9;
   }
 
-  protected isValidMove(
+  isValidMove(
     x: number,
     y: number,
     map: GameMap,
     otherMonsters: Monster[]
   ): boolean {
+    const mapHeight = map.length;
+    const mapWidth = map[0].length;
+    if (x < 0 || x >= mapWidth || y < 0 || y >= mapHeight) return false;
+
     const isCellFree = map[y][x] === 'Empty';
     const isMonsterCollision = otherMonsters.some((monster) => monster.getX() === x && monster.getY() === y);
     return isCellFree && !isMonsterCollision;

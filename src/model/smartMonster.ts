@@ -50,7 +50,7 @@ class SmartMonster extends Monster {
     return new SmartMonster(this.id, this.name, newX, newY);
   }
 
-  private findPathToNearestPlayer(players: Player[], map: GameMap): Point[] {
+  findPathToNearestPlayer(players: Player[], map: GameMap): Point[] {
     const closestPlayer = players.reduce((closest, player) => {
       const closestDistance = (closest.getX() - this.x) ** 2 + (closest.getY() - this.y) ** 2;
       const playerDistance = (player.getX() - this.x) ** 2 + (player.getY() - this.y) ** 2;
@@ -64,7 +64,7 @@ class SmartMonster extends Monster {
     );
   }
 
-  private aStarSearch(map: GameMap, start: Point, goal: Point): Point[] {
+  aStarSearch(map: GameMap, start: Point, goal: Point): Point[] {
     let openSet: Point[] = [start];
     const cameFrom: Map<string, Point> = new Map();
 
@@ -102,7 +102,7 @@ class SmartMonster extends Monster {
     return [];
   }
 
-  private getNeighbors(point: Point, map: GameMap): Point[] {
+  getNeighbors(point: Point, map: GameMap): Point[] {
     const neighbors: Point[] = [];
     const directions = [
       [0, 1], // Down
@@ -120,11 +120,11 @@ class SmartMonster extends Monster {
     return neighbors;
   }
 
-  private heuristic(a: Point, b: Point): number {
+  heuristic(a: Point, b: Point): number {
     return Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
   }
 
-  private reconstructPath(cameFrom: Map<string, Point>, current: Point): Point[] {
+  reconstructPath(cameFrom: Map<string, Point>, current: Point): Point[] {
     const path = [];
     while (current) {
       path.unshift(current);

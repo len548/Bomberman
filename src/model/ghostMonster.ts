@@ -37,12 +37,12 @@ class GhostMonster extends Monster {
     return new GhostMonster(this.id, this.name, newX, newY);
   }
 
-  protected isValidMove(
+  isValidMove(
     y: number,
     x: number,
     map: GameMap
   ): boolean {
-    return (!(isBomb(map[x][y])) && map[x][y] !== 'Wall');
+    return (!(isBomb(map[y][x])) && map[y][x] !== 'Wall');
   }
 }
 
