@@ -1,15 +1,12 @@
-/* eslint-disable no-lone-blocks */
-/* eslint-disable no-nested-ternary */
-import React from 'react';
+/* eslint-disable consistent-return */
+/* eslint-disable no-shadow */
+import React, { useState, useEffect } from 'react';
 import {
   CharacterContainer,
   GridCell
 } from './GameScreen.styles';
 import wallImage from '../../assets/wall.jpeg';
 import boxImage from '../../assets/box.png';
-import player1Image from '../../assets/player1.png';
-import player2Image from '../../assets/player2.png';
-import player3Image from '../../assets/player3.png';
 import bombImage from '../../assets/bomb.png';
 import addBombImage from '../../assets/addbomb.png';
 import blastRangeUpImage from '../../assets/blastrange.png';
@@ -20,15 +17,19 @@ import ghostImage from '../../assets/ghost.png';
 import obstacleImage from '../../assets/obstacle.png';
 import { Player } from '../../model/player';
 import { Monster } from '../../model/monster';
-import { GameMap, isPower, isBomb } from '../../model/gameItem';
+import {
+  GameMap, isPower, isBomb, Power
+} from '../../model/gameItem';
 
-type GridCellComponentProps = {
-  row: number;
-  column: number;
-  players: Player[];
-  monsters: Monster[];
-  map: GameMap;
-}
+import player1Image from '../../assets/player1.png';
+import player1GhostImage from '../../assets/player1ghost.png';
+import player1InvincibleImage from '../../assets/player1armor.png';
+import player2Image from '../../assets/player2.png';
+import player2GhostImage from '../../assets/player2ghost.png';
+import player2InvincibleImage from '../../assets/player2armor.png';
+import player3Image from '../../assets/player3.png';
+import player3GhostImage from '../../assets/player3ghost.png';
+import player3InvincibleImage from '../../assets/player3armor.png';
 
 const powerUpImgs = {
   AddBomb: addBombImage,
@@ -40,12 +41,50 @@ const powerUpImgs = {
   Obstacle: obstacleImage,
 };
 
+type PlayerImageSet = {
+  normal: string;
+  ghost: string;
+  invincible: string;
+};
+
+type PlayerKey = 'player1' | 'player2' | 'player3';
+
+const playerImages: Record<PlayerKey, PlayerImageSet> = {
+  player1: {
+    normal: player1Image,
+    ghost: player1GhostImage,
+    invincible: player1InvincibleImage,
+  },
+  player2: {
+    normal: player2Image,
+    ghost: player2GhostImage,
+    invincible: player2InvincibleImage,
+  },
+  player3: {
+    normal: player3Image,
+    ghost: player3GhostImage,
+    invincible: player3InvincibleImage,
+  }
+};
+
+type GridCellComponentProps = {
+  row: number;
+  column: number;
+  players: Player[];
+  monsters: Monster[];
+  map: GameMap;
+  isPowerUpActive: (playerId: string, powerUp: Power) => boolean;
+  isPowerUpFlashing: (playerId: string, powerUp: Power) => boolean;
+}
+
 export const GridCellComponent = ({
   row,
   column,
   players,
   monsters,
   map,
+  isPowerUpActive,
+  isPowerUpFlashing
 }: GridCellComponentProps) => {
   const cellContent = map[row][column];
   const isWallCell = cellContent === 'Wall';
@@ -56,6 +95,33 @@ export const GridCellComponent = ({
   const monster = monsters.find((m) => m.getX() === column && m.getY() === row);
   const isEmptyCell = !isWallCell && !isBoxCell;
 
+  const [isFlashing, setIsFlashing] = useState(false);
+
+  useEffect(() => {
+    if (player && (isPowerUpFlashing(player.getId(), 'Ghost') || isPowerUpFlashing(player.getId(), 'Invincibility'))) {
+      setIsFlashing(true);
+      const interval = setInterval(() => {
+        setIsFlashing((prev) => !prev);
+      }, 500);
+
+      return () => clearInterval(interval);
+    }
+    setIsFlashing(false);
+  }, [isPowerUpFlashing, player]);
+
+  const getPlayerImage = (player: Player) => {
+    const name = player.getName() as PlayerKey;
+    if (isFlashing) {
+      return playerImages[name]?.normal || playerImages.player1.normal;
+    }
+    if (playerImages[name]) {
+      if (isPowerUpActive(player.getId(), 'Ghost')) return playerImages[name].ghost;
+      if (isPowerUpActive(player.getId(), 'Invincibility')) return playerImages[name].invincible;
+      return playerImages[name].normal;
+    }
+    return playerImages.player1.normal;
+  };
+
   return (
     <GridCell isWall={isWallCell} style={{ backgroundColor: isEmptyCell ? 'green' : 'transparent' }}>
       {isWallCell && <img src={wallImage} alt="Wall" style={{ width: '100%', height: '100%' }} />}
@@ -64,11 +130,7 @@ export const GridCellComponent = ({
       {player && player.isAlive() && (
         <CharacterContainer>
           <img
-            src={
-              player.getId() === '1'
-                ? player1Image : player.getId() === '2'
-                  ? player2Image : player3Image
-            }
+            src={getPlayerImage(player)}
             alt="Player"
             style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }}
           />

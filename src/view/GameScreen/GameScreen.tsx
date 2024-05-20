@@ -1,6 +1,7 @@
 /* eslint-disable no-console */
 /* eslint-disable max-len */
 /* eslint-disable consistent-return */
+/* eslint-disable react/no-array-index-key */
 import React, {
   useState, useEffect, useCallback, useRef
 } from 'react';
@@ -16,6 +17,7 @@ import { GridCellComponent } from './GridCellComponent';
 import { KeyBindings } from '../../constants/props';
 import {
   GameMap,
+  Power,
   gameItem,
   randomPowerUpGenerator
 } from '../../model/gameItem';
@@ -26,10 +28,21 @@ import { SmartMonster } from '../../model/smartMonster';
 import { ForkMonster } from '../../model/forkMonster';
 import { RoundResultDialog } from './RoundResultDialog';
 
+import player1Image from '../../assets/player1.png';
+import player1GhostImage from '../../assets/player1ghost.png';
+import player1InvincibleImage from '../../assets/player1armor.png';
+import player2Image from '../../assets/player2.png';
+import player2GhostImage from '../../assets/player2ghost.png';
+import player2InvincibleImage from '../../assets/player2armor.png';
+import player3Image from '../../assets/player3.png';
+import player3GhostImage from '../../assets/player3ghost.png';
+import player3InvincibleImage from '../../assets/player3armor.png';
+
 import ModifyControlsDialog from './SettingsScreen/ModifyControlsDialog';
 
 import { GameLayout } from './GameLayout';
 import { useBombManager } from '../../hooks/useBombManager';
+import usePowerUpManager from '../../hooks/usePowerUpManager';
 import { usePlayerActions } from '../../hooks/usePlayerActions';
 import { defaultMap } from '../../constants/contants';
 
@@ -62,9 +75,28 @@ const fetchMap = async (): Promise<GameMap> => {
 
 export const GameScreen = () => {
   const { numOfPlayers, numOfRounds, selectedMap } = useParams();
-  const [player, setPlayer] = useState(new Player('1', playerNames[0], 1, 1));
-  const [playerTwo, setPlayerTwo] = useState(new Player('2', playerNames[1], 13, 8));
-  const [playerThree, setPlayerThree] = useState(numOfPlayers === '3' ? new Player('3', playerNames[2], 7, 7) : null);
+
+  const playerImages = [
+    {
+      original: player1Image,
+      ghost: player1GhostImage,
+      invincible: player1InvincibleImage,
+    },
+    {
+      original: player2Image,
+      ghost: player2GhostImage,
+      invincible: player2InvincibleImage,
+    },
+    {
+      original: player3Image,
+      ghost: player3GhostImage,
+      invincible: player3InvincibleImage,
+    },
+  ];
+
+  const [player, setPlayer] = useState(new Player('1', 'player1', 1, 1, true, 4, 2, [], 0, playerImages[0].original, playerImages[0].ghost, playerImages[0].invincible));
+  const [playerTwo, setPlayerTwo] = useState(new Player('2', 'player2', 13, 8, true, 4, 2, [], 0, playerImages[1].original, playerImages[1].ghost, playerImages[1].invincible));
+  const [playerThree, setPlayerThree] = useState(numOfPlayers === '3' ? new Player('3', 'player3', 7, 7, true, 4, 2, [], 0, playerImages[2].original, playerImages[2].ghost, playerImages[2].invincible) : null);
   const [map, setMap] = useState<GameMap>([]);
   const mapRef = useRef(map);
   const playersRef = useRef([player, playerTwo, playerThree].filter((p): p is Player => p !== null));
@@ -79,6 +111,11 @@ export const GameScreen = () => {
   const {
     dropBomb: dropPlayerThreeBomb
   } = useBombManager(2, playersRef, setPlayers, mapRef, setMap);
+
+  const {
+    addPowerUp, removePowerUp, isPowerUpActive, isPowerUpFlashing
+  } = usePowerUpManager();
+
   const [keyBindings, setKeyBindings] = useState<KeyBindings>({});
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
@@ -190,7 +227,7 @@ export const GameScreen = () => {
       keyBindings: keyBindings['3'],
       enemies: [player, playerTwo]
     } : null
-  ], mapRef, setMap);
+  ], mapRef, setMap, (playerId: string, powerUp: Power, duration: number) => addPowerUp(playerId, powerUp, duration), (playerId: string, powerUp: Power) => removePowerUp(playerId, powerUp), (playerId: string, powerUp: Power) => isPowerUpActive(playerId, powerUp));
 
   useEffect(() => {
     const storedBindings = localStorage.getItem('playerKeyBindings');
@@ -241,10 +278,10 @@ export const GameScreen = () => {
     }
   }, [isPaused, map]);
 
-  const resetRound = () => {
-    setPlayer(new Player('1', playerNames[0], 1, 1, true));
-    setPlayerTwo(new Player('2', playerNames[1], 13, 8, true));
-    setPlayerThree(numOfPlayers === '3' ? new Player('3', playerNames[2], 1, 8, true) : null);
+  const resetRound = useCallback(() => {
+    setPlayer(new Player('1', 'player1', 1, 1, true, 4, 2, [], 0, playerImages[0].original, playerImages[0].ghost, playerImages[0].invincible));
+    setPlayerTwo(new Player('2', 'player2', 13, 8, true, 4, 2, [], 0, playerImages[1].original, playerImages[1].ghost, playerImages[1].invincible));
+    setPlayerThree(numOfPlayers === '3' ? new Player('3', 'player3', 1, 8, true, 4, 2, [], 0, playerImages[2].original, playerImages[2].ghost, playerImages[2].invincible) : null);
     if (selectedMap === 'map1') {
       if (numOfPlayers === '3') {
         setMonsters([
@@ -287,9 +324,9 @@ export const GameScreen = () => {
         ]);
       }
     }
-  };
+  }, [numOfPlayers, selectedMap]);
 
-  const checkEndOfRound = () => {
+  const checkEndOfRound = useCallback(() => {
     const activePlayers = [player, playerTwo, playerThree].filter((p) => p && p.isAlive());
 
     if (activePlayers.length <= 1) {
@@ -304,7 +341,7 @@ export const GameScreen = () => {
       resetRound();
       fetchMap().then(setMap);
     }
-  };
+  }, [player, playerTwo, playerThree, resetRound]);
 
   const handleClose = () => {
     setDialogOpen(false);
@@ -321,38 +358,37 @@ export const GameScreen = () => {
       if (monsterTemp.getX() === currentPlayer.getX()
         && monsterTemp.getY() === currentPlayer.getY()
         && currentPlayer.isAlive()
-        && !currentPlayer.isInvincible()) {
+        && !isPowerUpActive(currentPlayer.getId(), 'Invincibility')) {
         currentPlayer.killPlayer();
         setPlayer(Player.fromPlayer(currentPlayer));
       }
       if (monsterTemp.getX() === currentPlayerTwo.getX()
         && monsterTemp.getY() === currentPlayerTwo.getY()
         && currentPlayerTwo.isAlive()
-        && !currentPlayerTwo.isInvincible()) {
+        && !isPowerUpActive(currentPlayerTwo.getId(), 'Invincibility')) {
         currentPlayerTwo.killPlayer();
         setPlayerTwo(Player.fromPlayer(currentPlayerTwo));
       }
       if (currentPlayerThree && monsterTemp.getX() === currentPlayerThree.getX()
         && monsterTemp.getY() === currentPlayerThree.getY()
         && currentPlayerThree.isAlive()
-        && !currentPlayerThree.isInvincible()) {
+        && !isPowerUpActive(currentPlayerThree.getId(), 'Invincibility')) {
         currentPlayerThree.killPlayer();
         setPlayerThree(Player.fromPlayer(currentPlayerThree));
       }
     });
     checkEndOfRound();
-  }, [player, playerTwo, playerThree, monsters]);
+  }, [isPowerUpActive, checkEndOfRound]);
 
   useEffect(() => {
     checkPlayerMonsterCollision(player, playerTwo, playerThree, monsters);
-  }, [player, playerTwo, monsters, playerThree]);
+  }, [player, playerTwo, monsters, playerThree, checkPlayerMonsterCollision]);
 
   useEffect(() => {
     if (isPaused) return;
     window.addEventListener('keydown', handleKeyDown);
-    // eslint-disable-next-line consistent-return
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [handleKeyDown]);
+  }, [handleKeyDown, isPaused]);
 
   useEffect(() => {
     const smartInterval = setInterval(moveSmartMonsters, 600);
@@ -377,8 +413,8 @@ export const GameScreen = () => {
   };
 
   const handleRestartGame = () => {
-    setPlayer(new Player('player1', playerNames[0], 1, 1));
-    setPlayerTwo(new Player('player2', playerNames[1], 13, 8));
+    setPlayer(new Player('player1', playerNames[0], 1, 1, true, 4, 2, [], 0, playerImages[0].original, playerImages[0].ghost, playerImages[0].invincible));
+    setPlayerTwo(new Player('player2', playerNames[1], 13, 8, true, 4, 2, [], 0, playerImages[1].original, playerImages[1].ghost, playerImages[1].invincible));
 
     setMonsters([
       new SmartMonster('monster1', 'Monster 1', 5, 5),
@@ -397,13 +433,14 @@ export const GameScreen = () => {
 
   const renderCellsAndPlayer = () => map.flatMap((row, rowIndex) => row.map((cell, colIndex) => (
     <GridCellComponent
-      // eslint-disable-next-line react/no-array-index-key
       key={`${rowIndex}-${colIndex}`}
       row={rowIndex}
       column={colIndex}
       players={[player, playerTwo, playerThree].filter((p) => p?.isAlive()) as Player[]}
       monsters={monsters}
       map={map}
+      isPowerUpActive={isPowerUpActive}
+      isPowerUpFlashing={isPowerUpFlashing}
     />
   )));
 

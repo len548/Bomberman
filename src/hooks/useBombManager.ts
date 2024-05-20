@@ -77,6 +77,12 @@ export const useBombManager = (
     });
     positionsToCheck.forEach(({ newY, newX }) => {
       const affectedItem = map[newY][newX];
+
+      // TODO: Trigger other bombs
+      // if (typeof affectedItem !== 'string' && 'range' in affectedItem) {
+      //   explodeBomb(newY, newX, affectedItem);
+      // }
+
       // Destroy boxes and potentially drop power-ups
       if (affectedItem === 'Box') {
         newMap[newY][newX] = randomPowerUpGenerator(); // Replace with a power-up or empty
