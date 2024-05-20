@@ -207,16 +207,15 @@ class Player {
   }
 
   removePowerUp(powerUp: Power): void {
-    const index = this.powerUps.indexOf(powerUp);
-    if (index > -1) {
-      this.powerUps.splice(index, 1);
+    if (this.powerUps.has(powerUp)) {
+      this.powerUps.delete(powerUp);
       console.log(`${this.name} has lost the ${powerUp} power-up.`);
-      console.log(`player ${this.id} power-ups: ${this.powerUps}`);
+      console.log(`player ${this.id} power-ups: ${Array.from(this.powerUps)}`);
     }
   }
 
   isDetonator(): boolean {
-    return this.powerUps.includes('Detonator');
+    return this.powerUps.has('Detonator');
   }
 
   isInvincible(): boolean {
