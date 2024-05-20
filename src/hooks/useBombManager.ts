@@ -25,7 +25,7 @@ export const useBombManager = (
     const mapWidth = map[0].length;
     // Include the bomb's own location
     positionsToCheck.push({ newY: y, newX: x });
-    
+
     // Vertical - up and down from the bomb
     for (let dy = -1; dy >= -blastRange; dy -= 1) {
       const tempY = y + dy;
