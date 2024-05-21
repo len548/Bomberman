@@ -1,3 +1,4 @@
+/* eslint-disable no-plusplus */
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { BrowserRouter, useNavigate, NavigateFunction } from 'react-router-dom';
@@ -46,7 +47,6 @@ describe('ConfigScreen', () => {
     );
     if (step > 0) {
       const nextButton = screen.getByText('Next');
-      // eslint-disable-next-line no-plusplus
       for (let i = 0; i < step; i++) {
         fireEvent.click(nextButton);
       }
@@ -90,5 +90,30 @@ describe('ConfigScreen', () => {
     fireEvent.keyDown(player2Input, { key: 'A' });
     const errorMessage = screen.getByText('Please correct the highlighted key conflicts before proceeding.');
     expect(errorMessage).toBeInTheDocument();
+  });
+
+  it('should render map selection buttons', () => {
+    setup();
+    const map1Button = screen.getByLabelText('map1');
+    const map2Button = screen.getByLabelText('map2');
+    const map3Button = screen.getByLabelText('map3');
+    expect(map1Button).toBeInTheDocument();
+    expect(map2Button).toBeInTheDocument();
+    expect(map3Button).toBeInTheDocument();
+  });
+
+  it('should select a map when a map button is clicked', () => {
+    setup();
+    const map1Button = screen.getByLabelText('map1');
+    fireEvent.click(map1Button);
+    expect(map1Button).toHaveAttribute('aria-pressed', 'true');
+  });
+
+  it('should save configuration and navigate to game screen on play', () => {
+    setup(1);
+    const playButton = screen.getByText('Play');
+    fireEvent.click(playButton);
+    expect(localStorage.getItem('playerKeyBindings')).not.toBeNull();
+    expect(mockNavigate).toHaveBeenCalledWith(expect.stringMatching(/\/game\/\d+\/\d+\/map\d+/));
   });
 });
