@@ -96,37 +96,39 @@ class Player {
     removePowerUp: (powerUp: Power) => void,
     isPowerUpActive: (powerUp: Power) => boolean
   ): Player {
-    let newX = this.x;
-    let newY = this.y;
+    const moveDistance = this.powerUps.includes('RollerSkate') ? 2 : 1;
 
-    switch (direction) {
-      case 'up':
-        newY -= this.y > 0 && this.isValidMove(newY - 1, this.x, map, isPowerUpActive) ? 1 : 0;
-        break;
-      case 'down':
-        newY += this.y < map.length - 1
-        && this.isValidMove(newY + 1, this.x, map, isPowerUpActive) ? 1 : 0;
-        break;
-      case 'left':
-        newX -= this.x > 0 && this.isValidMove(this.y, newX - 1, map, isPowerUpActive) ? 1 : 0;
-        break;
-      case 'right':
-        newX += (
-          this.x < map[0].length - 1 && this.isValidMove(this.y, newX + 1, map, isPowerUpActive)
-        ) ? 1 : 0;
-        break;
-      default:
-        break;
+    for (let i = 0; i < moveDistance; i += 1) {
+      let newX = this.x;
+      let newY = this.y;
+      switch (direction) {
+        case 'up':
+          newY -= this.y > 0 && this.isValidMove(newY - 1, this.x, map, isPowerUpActive) ? 1 : 0;
+          break;
+        case 'down':
+          newY += this.y < map.length - 1
+          && this.isValidMove(newY + 1, this.x, map, isPowerUpActive) ? 1 : 0;
+          break;
+        case 'left':
+          newX -= this.x > 0 && this.isValidMove(this.y, newX - 1, map, isPowerUpActive) ? 1 : 0;
+          break;
+        case 'right':
+          newX += (
+            this.x < map[0].length - 1 && this.isValidMove(this.y, newX + 1, map, isPowerUpActive)
+          ) ? 1 : 0;
+          break;
+        default:
+          break;
+      }
+
+      const collidesWithPlayer = otherPlayers.some((p) => p.getX() === newX && p.getY() === newY);
+
+      if (!collidesWithPlayer) {
+        this.x = newX;
+        this.y = newY;
+        this.checkCollisionWithPowerUp(map, setMap, addPowerUp);
+      }
     }
-
-    const collidesWithPlayer = otherPlayers.some((p) => p.getX() === newX && p.getY() === newY);
-
-    if (!collidesWithPlayer) {
-      this.x = newX;
-      this.y = newY;
-      this.checkCollisionWithPowerUp(map, setMap, addPowerUp);
-    }
-
     return this;
   }
 
@@ -137,6 +139,11 @@ class Player {
         break;
       case 'BlastRangeUp':
         this.bombRange += 1;
+        break;
+      case 'Detonator':
+        if (!this.powerUps.includes('Detonator')) {
+          this.powerUps.push(powerUp);
+        }
         break;
       case 'RollerSkate':
         if (!this.powerUps.includes('RollerSkate')) {
