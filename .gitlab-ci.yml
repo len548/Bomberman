@@ -29,7 +29,7 @@ stages:          # List of stages for jobs, and their order of execution
 image: node:latest
 
 before_script:
-  - npm install
+  - npm install --legacy-peer-deps
 
 build-job:       # This job runs in the build stage, which runs first.
   stage: build

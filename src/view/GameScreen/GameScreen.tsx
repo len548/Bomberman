@@ -88,23 +88,25 @@ export const GameScreen = () => {
     },
   ];
 
-  const [player, setPlayer] = useState(new Player('player1', playerNames[0], 1, 1, true, 4, 2, [], 0, playerImages[0].original, playerImages[0].ghost, playerImages[0].invincible));
-  const [playerTwo, setPlayerTwo] = useState(new Player('player2', playerNames[1], 13, 8, true, 4, 2, [], 0, playerImages[1].original, playerImages[1].ghost, playerImages[1].invincible));
-  const [playerThree, setPlayerThree] = useState(numOfPlayers === '3' ? new Player('player3', playerNames[2], 1, 8, true, 4, 2, [], 0, playerImages[2].original, playerImages[2].ghost, playerImages[2].invincible) : null);
+  const [player, setPlayer] = useState(new Player('player1', playerNames[0], 1, 1, true, 1, 2, [], 0, playerImages[0].original, playerImages[0].ghost, playerImages[0].invincible));
+  const [playerTwo, setPlayerTwo] = useState(new Player('player2', playerNames[1], 13, 8, true, 1, 2, [], 0, playerImages[1].original, playerImages[1].ghost, playerImages[1].invincible));
+  const [playerThree, setPlayerThree] = useState(numOfPlayers === '3' ? new Player('player3', playerNames[2], 1, 8, true, 1, 2, [], 0, playerImages[2].original, playerImages[2].ghost, playerImages[2].invincible) : null);
   const [map, setMap] = useState<GameMap>([]);
   const mapRef = useRef(map);
   const playersRef = useRef([player, playerTwo, playerThree].filter((p): p is Player => p !== null));
   playersRef.current = [player, playerTwo, playerThree].filter((p): p is Player => p !== null);
   const setPlayers = [setPlayer, setPlayerTwo, setPlayerThree];
+  const [explosions, setExplosions] = useState<{ x: number, y: number }[]>([]);
+  const [destroyedBoxes, setDestroyedBoxes] = useState<{ x: number, y: number }[]>([]);
   const {
     dropBomb: dropPlayerOneBomb
-  } = useBombManager(0, playersRef, setPlayers, mapRef, setMap);
+  } = useBombManager(0, playersRef, setPlayers, mapRef, setMap, setExplosions, setDestroyedBoxes);
   const {
     dropBomb: dropPlayerTwoBomb
-  } = useBombManager(1, playersRef, setPlayers, mapRef, setMap);
+  } = useBombManager(1, playersRef, setPlayers, mapRef, setMap, setExplosions, setDestroyedBoxes);
   const {
     dropBomb: dropPlayerThreeBomb
-  } = useBombManager(2, playersRef, setPlayers, mapRef, setMap);
+  } = useBombManager(2, playersRef, setPlayers, mapRef, setMap, setExplosions, setDestroyedBoxes);
 
   const {
     addPowerUp, removePowerUp, isPowerUpActive, isPowerUpFlashing, clearPowerUps
@@ -488,6 +490,8 @@ export const GameScreen = () => {
       map={map}
       isPowerUpActive={isPowerUpActive}
       isPowerUpFlashing={isPowerUpFlashing}
+      explosions={explosions} // Pass explosions prop
+      destroyedBoxes={destroyedBoxes} // Pass destroyed boxes prop
     />
   )));
 

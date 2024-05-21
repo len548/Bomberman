@@ -22,6 +22,8 @@ class Player {
 
   private bombs: number;
 
+  private activeBombs: number; // Current active bombs
+
   private bombRange: number;
 
   private powerUps: Power[];
@@ -42,7 +44,7 @@ class Player {
     x: number,
     y: number,
     isActive: boolean = true,
-    bombs: number = 4,
+    bombs: number = 1,
     bombRange: number = 2,
     powerUps: Power[] = [],
     obstacles: number = 0,
@@ -56,6 +58,7 @@ class Player {
     this.y = y;
     this.isActive = isActive;
     this.bombs = bombs;
+    this.activeBombs = 0; // Initialize active bombs to 0
     this.bombRange = bombRange;
     this.powerUps = powerUps;
     this.obstacles = obstacles;
@@ -66,7 +69,7 @@ class Player {
   }
 
   static fromPlayer(player: Player): Player {
-    return new Player(
+    const newPlayer = new Player(
       player.id,
       player.name,
       player.x,
@@ -80,6 +83,8 @@ class Player {
       player.ghostImage,
       player.invincibleImage
     );
+    newPlayer.activeBombs = player.activeBombs; // Copy active bombs
+    return newPlayer;
   }
 
   move(
@@ -201,8 +206,20 @@ class Player {
     this.isActive = true;
   }
 
-  decrementBombs(): void {
-    this.bombs -= 1;
+  canPlaceBomb(): boolean {
+    return this.activeBombs < this.bombs;
+  }
+
+  incrementActiveBombs(): void {
+    if (this.canPlaceBomb()) {
+      this.activeBombs += 1;
+    }
+  }
+
+  decrementActiveBombs(): void {
+    if (this.activeBombs > 0) {
+      this.activeBombs -= 1;
+    }
   }
 
   removePowerUp(powerUp: Power): void {

@@ -15,6 +15,8 @@ export interface Bomb {
 
 export type gameItem = BaseContent | Power | Obstacle | Bomb;
 
+export type Explosion = 'Explosion'; // explosion type
+
 export type GameMap = gameItem[][];
 
 const powerUpOptions: Power[] = ['AddBomb', 'BlastRangeUp', 'Detonator', 'RollerSkate', 'Invincibility', 'Ghost', 'Obstacle'];
