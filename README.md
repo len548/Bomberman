@@ -11,7 +11,7 @@ To get started with this game, you'll need to have Node.js installed on your mac
 First, clone the repository to your local machine:
 
 ```bash
-git clone https://szofttech.inf.elte.hu/software-technology-2024/group-5/academic-avengers.git
+git clone https://github.com/len548/Bomberman.git
 cd bomberman
 ```
 
